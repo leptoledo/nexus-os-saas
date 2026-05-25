@@ -1,0 +1,189 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata (backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/backend
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+            type=raw,value=latest
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract Docker metadata (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/frontend
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+            type=raw,value=latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT }}
+          script: |
+            set -e
+            cd /opt/nexus-os
+
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull
+
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --no-build
+
+            docker image prune -f
+
+            echo "Deploy concluido com sucesso!"
+
+      - name: Run Supabase Migrations
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT }}
+          script: |
+            set -e
+            cd /opt/nexus-os
+            export SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}
+            npx supabase db push --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+            echo "Migrations aplicadas com sucesso!"
+
+      - name: Health Check
+        run: |
+          echo "Aguardando servicos iniciarem..."
+          sleep 30
+
+          BACKEND_URL="${{ secrets.PROD_BACKEND_URL }}/api/health"
+          FRONTEND_URL="${{ secrets.PROD_FRONTEND_URL }}"
+
+          echo "Verificando backend: $BACKEND_URL"
+          for i in $(seq 1 5); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Backend OK (HTTP $STATUS)"
+              break
+            fi
+            echo "Tentativa $i/5 — Backend retornou HTTP $STATUS. Aguardando..."
+            sleep 10
+          done
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERRO: Backend nao respondeu apos 5 tentativas!"
+            exit 1
+          fi
+
+          echo "Verificando frontend: $FRONTEND_URL"
+          FRONT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL" || echo "000")
+          if [ "$FRONT_STATUS" != "200" ]; then
+            echo "ERRO: Frontend retornou HTTP $FRONT_STATUS!"
+            exit 1
+          fi
+          echo "Frontend OK (HTTP $FRONT_STATUS)"
+
+          echo "Health checks passaram com sucesso!"
+
+      - name: Notify Slack — Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": ":white_check_mark: *Deploy NexusOS bem-sucedido!*",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    {"title": "Ambiente", "value": "Production", "short": true},
+                    {"title": "Branch", "value": "${{ github.ref_name }}", "short": true},
+                    {"title": "Commit", "value": "${{ github.sha }}", "short": false},
+                    {"title": "Autor", "value": "${{ github.actor }}", "short": true}
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack — Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": ":x: *Deploy NexusOS FALHOU!*",
+              "attachments": [
+                {
+                  "color": "#ff0000",
+                  "fields": [
+                    {"title": "Ambiente", "value": "Production", "short": true},
+                    {"title": "Branch", "value": "${{ github.ref_name }}", "short": true},
+                    {"title": "Commit", "value": "${{ github.sha }}", "short": false},
+                    {"title": "Autor", "value": "${{ github.actor }}", "short": true},
+                    {"title": "Logs", "value": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}", "short": false}
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
