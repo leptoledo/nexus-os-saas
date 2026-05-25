@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // standalone only for Docker — Vercel uses its own build pipeline
+  output: process.env.VERCEL ? undefined : 'standalone',
   images: {
     remotePatterns: [
       {
