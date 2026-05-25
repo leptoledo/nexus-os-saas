@@ -30,24 +30,9 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     logger.info("NexusOS API starting up (env=%s)", settings.APP_ENV)
 
-    # Verify Supabase connectivity
-    try:
-        from app.database import get_supabase_admin
-        admin = get_supabase_admin()
-        admin.table("organizations").select("id").limit(1).execute()
-        logger.info("Supabase connection OK")
-    except Exception as exc:
-        logger.warning("Supabase connection check failed: %s", exc)
-
-    # Verify Stripe
-    if settings.STRIPE_SECRET_KEY:
-        try:
-            import stripe
-            stripe.api_key = settings.STRIPE_SECRET_KEY
-            stripe.Balance.retrieve()
-            logger.info("Stripe connection OK")
-        except Exception as exc:
-            logger.warning("Stripe connection check failed: %s", exc)
+    # Skip blocking connectivity checks at startup — they can hang if env vars
+    # are not yet configured (e.g. fresh Railway deploy). Use /health/ready instead.
+    logger.info("NexusOS API ready")
 
     yield
 
@@ -138,16 +123,27 @@ app.include_router(notifications_router)
 
 @app.get("/health", tags=["Health"], summary="Health check")
 async def health_check():
-    """Returns API health status and basic connectivity info."""
+    """Lightweight liveness probe — always returns 200 immediately."""
+    return {"status": "ok", "version": "1.0.0", "environment": settings.APP_ENV}
+
+
+@app.get("/health/ready", tags=["Health"], summary="Readiness check")
+async def readiness_check():
+    """Returns connectivity status for Supabase and Redis."""
     checks: dict = {"api": "ok"}
 
-    # Supabase ping
-    try:
-        from app.database import get_supabase_admin
-        get_supabase_admin().table("organizations").select("id").limit(1).execute()
-        checks["database"] = "ok"
-    except Exception as exc:
-        checks["database"] = f"error: {exc}"
+    # Supabase ping (only if URL is configured)
+    if settings.SUPABASE_URL:
+        try:
+            from app.database import get_supabase_admin
+            import anyio
+            with anyio.fail_after(5):
+                get_supabase_admin().table("organizations").select("id").limit(1).execute()
+            checks["database"] = "ok"
+        except Exception as exc:
+            checks["database"] = f"error: {exc}"
+    else:
+        checks["database"] = "not configured"
 
     # Redis ping
     try:
@@ -159,7 +155,12 @@ async def health_check():
         checks["redis"] = f"error: {exc}"
 
     overall = "healthy" if all(v == "ok" for v in checks.values()) else "degraded"
-    return {"status": overall, "version": "1.0.0", "environment": settings.APP_ENV, "checks": checks}
+    status_code = 200 if overall == "healthy" else 207
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        content={"status": overall, "version": "1.0.0", "environment": settings.APP_ENV, "checks": checks},
+        status_code=status_code,
+    )
 
 
 @app.get("/", include_in_schema=False)
