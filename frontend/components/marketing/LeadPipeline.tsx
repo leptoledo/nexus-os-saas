@@ -52,9 +52,10 @@ const MOCK_LEADS: Lead[] = [
 interface LeadCardProps {
   lead: Lead
   isDragging?: boolean
+  onAction?: (lead: Lead) => void
 }
 
-function LeadCard({ lead, isDragging }: LeadCardProps) {
+function LeadCard({ lead, isDragging, onAction }: LeadCardProps) {
   const score = SCORE_CONFIG[lead.score]
 
   return (
@@ -102,15 +103,20 @@ function LeadCard({ lead, isDragging }: LeadCardProps) {
       </div>
 
       {lead.next_action && (
-        <p className="mt-2 truncate text-[11px] text-gray-500 dark:text-gray-400">
-          → {lead.next_action}
-        </p>
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onAction?.(lead) }}
+          className="mt-2 flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-[11px] text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40 transition-colors"
+        >
+          <Calendar className="h-3 w-3 flex-shrink-0" />
+          <span className="truncate">{lead.next_action}</span>
+        </button>
       )}
     </div>
   )
 }
 
-function SortableLeadCard({ lead }: { lead: Lead }) {
+function SortableLeadCard({ lead, onAction }: { lead: Lead; onAction?: (lead: Lead) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
   })
@@ -123,7 +129,7 @@ function SortableLeadCard({ lead }: { lead: Lead }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} />
+      <LeadCard lead={lead} onAction={onAction} />
     </div>
   )
 }
@@ -131,9 +137,11 @@ function SortableLeadCard({ lead }: { lead: Lead }) {
 interface LeadPipelineProps {
   leads?: Lead[]
   onLeadMove?: (leadId: string, status: LeadStatus) => void
+  onLeadAction?: (lead: Lead) => void
+  onAddLead?: () => void
 }
 
-export function LeadPipeline({ leads: externalLeads, onLeadMove }: LeadPipelineProps) {
+export function LeadPipeline({ leads: externalLeads, onLeadMove, onLeadAction, onAddLead }: LeadPipelineProps) {
   const [leads, setLeads] = useState<Lead[]>(externalLeads ?? MOCK_LEADS)
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
 
@@ -224,7 +232,11 @@ export function LeadPipeline({ leads: externalLeads, onLeadMove }: LeadPipelineP
                       {columnLeads.length}
                     </span>
                   </div>
-                  <button className="rounded-md p-1 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <button
+                    onClick={onAddLead}
+                    title="Adicionar lead"
+                    className="rounded-md p-1 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -242,7 +254,7 @@ export function LeadPipeline({ leads: externalLeads, onLeadMove }: LeadPipelineP
                   strategy={verticalListSortingStrategy}
                 >
                   {columnLeads.map((lead) => (
-                    <SortableLeadCard key={lead.id} lead={lead} />
+                    <SortableLeadCard key={lead.id} lead={lead} onAction={onLeadAction} />
                   ))}
                 </SortableContext>
 

@@ -71,6 +71,7 @@ export default function MarketingPage() {
   const [showNewCampaign, setShowNewCampaign] = useState(false)
   const [showAddKeyword, setShowAddKeyword] = useState(false)
   const [showAddCalendarEvent, setShowAddCalendarEvent] = useState(false)
+  const [selectedLead, setSelectedLead] = useState<{ name: string; action: string } | null>(null)
 
   // Hooks
   const { data: leads, isLoading: leadsLoading } = useLeadPipeline()
@@ -114,6 +115,11 @@ export default function MarketingPage() {
 
   function handleLeadMove(leadId: string, status: LeadStatus) {
     moveLeadStage.mutate({ id: leadId, status })
+  }
+
+  function handleLeadAction(lead: any) {
+    setSelectedLead({ name: lead.name, action: lead.next_action })
+    setShowAddCalendarEvent(true)
   }
 
   return (
@@ -185,7 +191,12 @@ export default function MarketingPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                 </div>
               ) : (
-                <LeadPipeline leads={leads} onLeadMove={handleLeadMove} />
+                <LeadPipeline
+                  leads={leads}
+                  onLeadMove={handleLeadMove}
+                  onLeadAction={handleLeadAction}
+                  onAddLead={() => setShowNewLead(true)}
+                />
               )}
             </div>
           )}
