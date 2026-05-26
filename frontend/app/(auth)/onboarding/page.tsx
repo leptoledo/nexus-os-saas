@@ -127,7 +127,7 @@ export default function OnboardingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      const { url } = await billingApi.createCheckoutSession(plan.stripe_price_id)
+      const { url } = await billingApi.createCheckoutSession(plan.id)
       window.location.href = url
     } catch {
       toast.error('Erro ao redirecionar para o checkout.')

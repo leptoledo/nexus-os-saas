@@ -152,9 +152,14 @@ export const billingApi = {
     }>('/billing/subscription'),
   getInvoices: () =>
     apiClient.get<{ invoices: Invoice[] }>('/billing/invoices').then((r) => r.invoices ?? []),
-  createCheckoutSession: (priceId: string) =>
-    apiClient.post<{ url: string }>('/billing/checkout', { price_id: priceId }),
-  createPortalSession: () => apiClient.post<{ url: string }>('/billing/portal'),
+  createCheckoutSession: (plan: string) =>
+    apiClient
+      .post<{ checkout_url: string }>('/billing/checkout', { plan, interval: 'month' })
+      .then((r) => ({ url: r.checkout_url })),
+  createPortalSession: () =>
+    apiClient
+      .post<{ portal_url: string }>('/billing/portal')
+      .then((r) => ({ url: r.portal_url })),
   cancelSubscription: () => apiClient.put<void>('/billing/subscription/cancel'),
 }
 
