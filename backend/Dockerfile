@@ -19,7 +19,7 @@ COPY requirements.txt .
 
 # Install dependencies into a local prefix
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt
+    pip install --prefix=/install --no-cache-dir --ignore-installed -r requirements.txt
 
 
 # ============================================================
