@@ -1,4 +1,4 @@
-import { getSession } from './supabase'
+import { getSupabaseBrowser } from './supabase'
 import type {
   User,
   Organization,
@@ -30,9 +30,10 @@ class ApiClient {
   }
 
   private async getAuthHeader(): Promise<Record<string, string>> {
-    const session = await getSession()
-    if (!session?.access_token) return {}
-    return { Authorization: `Bearer ${session.access_token}` }
+    const supabase = getSupabaseBrowser()
+    const { data } = await supabase.auth.getSession()
+    if (!data.session?.access_token) return {}
+    return { Authorization: `Bearer ${data.session.access_token}` }
   }
 
   async request<T>(
