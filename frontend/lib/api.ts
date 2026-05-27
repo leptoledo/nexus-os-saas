@@ -128,6 +128,8 @@ export const authApi = {
 
 export const tenantsApi = {
   getOrganization: () => apiClient.get<Organization>('/organizations/me'),
+  createOrganization: (data: { name: string; industry?: string }) =>
+    apiClient.post<Organization>('/organizations', data),
   updateOrganization: (data: Partial<Organization>) =>
     apiClient.put<Organization>('/organizations/me', data),
   getMembers: () =>

@@ -23,7 +23,8 @@ import {
   PartyPopper,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
-import { billingApi } from '@/lib/api'
+import { billingApi, tenantsApi } from '@/lib/api'
+import { getSupabaseBrowser } from '@/lib/supabase'
 
 const STEPS = [
   { id: 1, label: 'Organização', icon: Building2 },
@@ -100,10 +101,15 @@ export default function OnboardingPage() {
 
   async function handleOrgSubmit(data: OrgFormValues) {
     try {
-      await updateOrganization({
-        name: data.org_name,
-        industry: data.industry as any,
-      })
+      const { organization } = useAuthStore.getState()
+      if (organization?.id) {
+        await updateOrganization({ name: data.org_name, industry: data.industry as any })
+      } else {
+        const org = await tenantsApi.createOrganization({ name: data.org_name, industry: data.industry })
+        useAuthStore.getState().setOrganization(org)
+        // Refresh JWT so org_id is embedded in the new token
+        await getSupabaseBrowser().auth.refreshSession()
+      }
       setCurrentStep(2)
     } catch {
       toast.error('Erro ao guardar organização.')
@@ -127,6 +133,8 @@ export default function OnboardingPage() {
 
     setIsLoadingCheckout(true)
     try {
+      // Garantir que o JWT tem o org_id mais recente antes do checkout
+      await getSupabaseBrowser().auth.refreshSession()
       const { url } = await billingApi.createCheckoutSession(plan.id)
       window.location.href = url
     } catch {
