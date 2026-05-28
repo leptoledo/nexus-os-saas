@@ -113,12 +113,12 @@ export const authApi = {
     })) as Promise<User>
   },
   uploadAvatar: async (file: File) => {
-    const { data } = await getSupabaseBrowser().auth.getSession()
+    const session = await getSession()
     const formData = new FormData()
     formData.append('file', file)
     return fetch(`${API_BASE_URL}/auth/avatar`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${data.session?.access_token}` },
+      headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
       body: formData,
     }).then((r) => r.json() as Promise<{ url: string }>)
   },
@@ -368,25 +368,25 @@ export const analyticsApi = {
 
   // Import
   importCSV: async (file: File, datasetName?: string) => {
-    const { data } = await getSupabaseBrowser().auth.getSession()
+    const session = await getSession()
     const formData = new FormData()
     formData.append('file', file)
     if (datasetName) formData.append('dataset_name', datasetName)
     return fetch(`${API_BASE_URL}/analytics/import/csv`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${data.session?.access_token}` },
+      headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
       body: formData,
     }).then((r) => r.json())
   },
 
   importExcel: async (file: File, datasetName?: string) => {
-    const { data } = await getSupabaseBrowser().auth.getSession()
+    const session = await getSession()
     const formData = new FormData()
     formData.append('file', file)
     if (datasetName) formData.append('dataset_name', datasetName)
     return fetch(`${API_BASE_URL}/analytics/import/excel`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${data.session?.access_token}` },
+      headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
       body: formData,
     }).then((r) => r.json())
   },

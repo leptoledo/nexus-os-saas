@@ -109,8 +109,6 @@ export default function OnboardingPage() {
       } else {
         const org = await tenantsApi.createOrganization({ name: data.org_name, sector: data.industry } as any)
         useAuthStore.getState().setOrganization(org)
-        // Refresh JWT so org_id is embedded in the new token
-        await getSupabaseBrowser().auth.refreshSession()
       }
       setCurrentStep(2)
     } catch {
