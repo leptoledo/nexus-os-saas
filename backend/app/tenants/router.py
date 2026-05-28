@@ -80,8 +80,32 @@ class MemberResponse(BaseModel):
 async def create_organization(
     body: CreateOrgRequest, current_user=Depends(get_current_user)
 ):
-    """Create a new organization and set caller as admin."""
+    """Create a new organization and set caller as admin.
+
+    Idempotent: if the caller is already a member of an organization, that
+    organization is returned instead of creating a duplicate.
+    """
     admin_client = get_supabase_admin()
+
+    # Idempotency: return existing org if user is already a member
+    existing_membership = (
+        admin_client.table("organization_members")
+        .select("org_id")
+        .eq("user_id", current_user.user_id)
+        .limit(1)
+        .execute()
+    )
+    if existing_membership.data:
+        existing_org_id = existing_membership.data[0]["org_id"]
+        existing_org = (
+            admin_client.table("organizations")
+            .select("*")
+            .eq("id", existing_org_id)
+            .single()
+            .execute()
+        )
+        if existing_org.data:
+            return OrgResponse(**existing_org.data)
 
     # Build slug from name if not provided
     slug = body.slug or body.name.lower().replace(" ", "-")
@@ -140,20 +164,21 @@ async def create_organization(
         except Exception:
             pass  # Ignore if already exists
 
-    # Update Supabase auth user app_metadata so JWT includes org_id on next login
+    # Update Supabase auth user app_metadata so JWT includes org_id on next refresh
     try:
         import httpx
         from app.config import settings as _settings
-        httpx.put(
-            f"{_settings.SUPABASE_URL}/auth/v1/admin/users/{current_user.user_id}",
-            headers={
-                "apikey": _settings.SUPABASE_SERVICE_KEY,
-                "Authorization": f"Bearer {_settings.SUPABASE_SERVICE_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={"app_metadata": {"org_id": org["id"], "role": "admin", "plan": "starter"}},
-            timeout=10,
-        )
+        async with httpx.AsyncClient() as _http:
+            await _http.put(
+                f"{_settings.SUPABASE_URL}/auth/v1/admin/users/{current_user.user_id}",
+                headers={
+                    "apikey": _settings.SUPABASE_SERVICE_KEY,
+                    "Authorization": f"Bearer {_settings.SUPABASE_SERVICE_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={"app_metadata": {"org_id": org["id"], "role": "admin", "plan": "starter"}},
+                timeout=10,
+            )
     except Exception as exc:
         logger.warning("Could not update user app_metadata: %s", exc)
 

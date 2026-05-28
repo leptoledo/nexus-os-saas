@@ -152,8 +152,33 @@ async def get_optional_user(
 
 
 async def get_tenant_id(request: Request) -> str:
-    """Extract org_id from request state (set by TenantMiddleware)."""
+    """Extract org_id from request state (set by TenantMiddleware).
+
+    Falls back to a database lookup via organization_members when the JWT does
+    not yet carry the org_id claim (e.g. right after org creation before the
+    token is refreshed).  Also promotes the stored role so RBAC works correctly.
+    """
     org_id: Optional[str] = getattr(request.state, "org_id", None)
+    if not org_id:
+        user_id: Optional[str] = getattr(request.state, "user_id", None)
+        if user_id:
+            try:
+                admin_client = get_supabase_admin()
+                result = (
+                    admin_client.table("organization_members")
+                    .select("org_id, role")
+                    .eq("user_id", user_id)
+                    .limit(1)
+                    .execute()
+                )
+                if result.data:
+                    org_id = result.data[0]["org_id"]
+                    request.state.org_id = org_id
+                    # Promote role so require_min_role checks use the real value
+                    if getattr(request.state, "user_role", "viewer") == "viewer":
+                        request.state.user_role = result.data[0].get("role", "viewer")
+            except Exception as exc:
+                logger.warning("get_tenant_id fallback DB lookup failed: %s", exc)
     if not org_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

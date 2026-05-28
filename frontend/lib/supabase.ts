@@ -124,13 +124,13 @@ export async function signUpWithEmail(
   password: string,
   metadata?: { name?: string; organization_name?: string }
 ) {
-  const supabase = getSupabaseBrowser()
-  return supabase.auth.signUp({
+  // Use a fresh, disposable client to avoid lock contention with the shared
+  // browser singleton (AuthProvider holds it open via onAuthStateChange).
+  const freshClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  return freshClient.auth.signUp({
     email,
     password,
-    options: {
-      data: metadata,
-    },
+    options: { data: metadata },
   })
 }
 

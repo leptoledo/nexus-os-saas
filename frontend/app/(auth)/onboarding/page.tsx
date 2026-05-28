@@ -86,12 +86,12 @@ type OrgFormValues = z.infer<typeof orgSchema>
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { updateOrganization } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState('pro')
   const [selectedModules, setSelectedModules] = useState<string[]>(['marketing', 'projects'])
   const [inviteEmails, setInviteEmails] = useState<string[]>([''])
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
+  const [isOrgSubmitting, setIsOrgSubmitting] = useState(false)
 
   const {
     register,
@@ -100,19 +100,23 @@ export default function OnboardingPage() {
   } = useForm<OrgFormValues>({ resolver: zodResolver(orgSchema) })
 
   async function handleOrgSubmit(data: OrgFormValues) {
+    setIsOrgSubmitting(true)
     try {
       const { organization } = useAuthStore.getState()
       if (organization?.id) {
-        await updateOrganization({ name: data.org_name, industry: data.industry as any })
+        await tenantsApi.updateOrganization({ name: data.org_name, sector: data.industry } as any)
+        useAuthStore.getState().setOrganization({ ...organization, name: data.org_name })
       } else {
-        const org = await tenantsApi.createOrganization({ name: data.org_name, industry: data.industry })
+        const org = await tenantsApi.createOrganization({ name: data.org_name, sector: data.industry } as any)
         useAuthStore.getState().setOrganization(org)
         // Refresh JWT so org_id is embedded in the new token
         await getSupabaseBrowser().auth.refreshSession()
       }
       setCurrentStep(2)
     } catch {
-      toast.error('Erro ao guardar organização.')
+      toast.error('Erro ao guardar organização. Tente novamente.')
+    } finally {
+      setIsOrgSubmitting(false)
     }
   }
 
@@ -274,9 +278,14 @@ export default function OnboardingPage() {
 
                   <button
                     type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                    disabled={isOrgSubmitting}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
                   >
-                    Continuar <ArrowRight className="h-4 w-4" />
+                    {isOrgSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>Continuar <ArrowRight className="h-4 w-4" /></>
+                    )}
                   </button>
                 </form>
               </div>
