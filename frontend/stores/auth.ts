@@ -74,12 +74,21 @@ export const useAuthStore = create<AuthStore>()(
       fetchUserData: async () => {
         set({ isLoading: true })
         try {
-          const [user, organization] = await Promise.all([
-            authApi.getProfile(),
-            tenantsApi.getOrganization(),
-          ])
+          // Fetch profile first — if this fails the user is truly not authenticated
+          const user = await authApi.getProfile()
+
+          // Fetch organization separately — a new user won't have one yet (400/404)
+          // so a failure here must NOT log the user out
+          let organization: Organization | null = null
+          try {
+            organization = await tenantsApi.getOrganization()
+          } catch {
+            // User has no org yet (e.g. in the middle of onboarding) — that's fine
+          }
+
           set({ user, organization, isAuthenticated: true })
         } catch {
+          // Profile fetch failed → user is genuinely not authenticated
           set({ user: null, organization: null, isAuthenticated: false })
         } finally {
           set({ isLoading: false })

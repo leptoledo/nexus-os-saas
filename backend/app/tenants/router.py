@@ -113,17 +113,19 @@ async def create_organization(
             return OrgResponse(**existing_org.data)
 
     # Build slug from name if not provided
-    slug = body.slug or body.name.lower().replace(" ", "-")
+    import re as _re, random as _random, string as _string
+    base_slug = body.slug or _re.sub(r"[^a-z0-9-]", "-", body.name.lower()).strip("-")
+    slug = base_slug
 
-    # Check slug uniqueness
-    existing = (
-        admin_client.table("organizations").select("id").eq("slug", slug).execute()
-    )
-    if existing.data:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Organization slug '{slug}' is already taken.",
+    # Ensure slug is unique — append a short random suffix if taken
+    for _attempt in range(10):
+        existing = (
+            admin_client.table("organizations").select("id").eq("slug", slug).execute()
         )
+        if not existing.data:
+            break
+        suffix = "".join(_random.choices(_string.digits, k=4))
+        slug = f"{base_slug}-{suffix}"
 
     now = datetime.utcnow().isoformat()
     try:

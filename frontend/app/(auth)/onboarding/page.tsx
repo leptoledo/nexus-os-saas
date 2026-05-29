@@ -132,7 +132,8 @@ export default function OnboardingPage() {
       setCurrentStep(2)
     } catch (err) {
       console.error('[onboarding] handleOrgSubmit error:', err)
-      toast.error('Erro ao guardar organização. Tente novamente.')
+      const msg = err instanceof Error ? err.message : String(err)
+      toast.error(`Erro ao guardar organização: ${msg}`)
     } finally {
       setIsOrgSubmitting(false)
     }
