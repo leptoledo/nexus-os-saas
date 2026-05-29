@@ -36,7 +36,7 @@ const STEPS = [
 
 const INDUSTRIES = [
   { value: 'logistics', label: 'Logística e Transporte' },
-  { value: 'tech', label: 'Tecnologia e Software' },
+  { value: 'technology', label: 'Tecnologia e Software' },
   { value: 'retail', label: 'Retalho e E-commerce' },
   { value: 'health', label: 'Saúde e Bem-estar' },
   { value: 'services', label: 'Serviços Profissionais' },

@@ -76,6 +76,17 @@ class MemberResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+VALID_SECTORS = {"logistics", "technology", "retail", "health", "services",
+                  "finance", "education", "other"}
+
+
+def _sanitize_sector(value: Optional[str]) -> Optional[str]:
+    """Return the sector value only if the DB enum accepts it, otherwise None."""
+    if value and value in VALID_SECTORS:
+        return value
+    return None
+
+
 @router.post("", response_model=OrgResponse, status_code=status.HTTP_201_CREATED)
 async def create_organization(
     body: CreateOrgRequest, current_user=Depends(get_current_user)
@@ -99,8 +110,9 @@ async def create_organization(
         existing_org_id = existing_membership.data[0]["org_id"]
         # Apply the submitted name / sector so re-submitting the form updates the org
         update_payload: Dict[str, Any] = {"name": body.name}
-        if body.sector:
-            update_payload["sector"] = body.sector
+        sanitized = _sanitize_sector(body.sector)
+        if sanitized:
+            update_payload["sector"] = sanitized
         admin_client.table("organizations").update(update_payload).eq("id", existing_org_id).execute()
         existing_org = (
             admin_client.table("organizations")
@@ -136,7 +148,7 @@ async def create_organization(
                     "name": body.name,
                     "slug": slug,
                     "plan": "starter",
-                    "sector": body.sector,
+                    "sector": _sanitize_sector(body.sector),
                     "logo_url": body.logo_url,
                     "timezone": body.timezone or "Europe/Lisbon",
                     "onboarding_completed": False,
