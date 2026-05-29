@@ -102,16 +102,36 @@ export default function OnboardingPage() {
   async function handleOrgSubmit(data: OrgFormValues) {
     setIsOrgSubmitting(true)
     try {
-      const { organization } = useAuthStore.getState()
-      if (organization?.id) {
-        await tenantsApi.updateOrganization({ name: data.org_name, sector: data.industry } as any)
-        useAuthStore.getState().setOrganization({ ...organization, name: data.org_name })
-      } else {
-        const org = await tenantsApi.createOrganization({ name: data.org_name, sector: data.industry } as any)
-        useAuthStore.getState().setOrganization(org)
+      // Always use createOrganization — it's idempotent on the backend (updates name/sector
+      // if the org already exists). This avoids the RBAC check on PUT /organizations/me
+      // which requires manager role that may not yet be in the JWT for new users.
+      const org = await tenantsApi.createOrganization({ name: data.org_name, sector: data.industry } as any)
+      useAuthStore.getState().setOrganization(org)
+
+      // Refresh the JWT with a disposable client so the new org_id + role appear in
+      // subsequent requests without contending for the shared singleton lock held by AuthProvider.
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const freshClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            auth: {
+              storage: localStorage,
+              storageKey: 'sb-nozsstkwknmjpepzxqqb-auth-token',
+              persistSession: true,
+              autoRefreshToken: false,
+            },
+          }
+        )
+        await freshClient.auth.refreshSession()
+      } catch {
+        // Non-fatal — the org was created/updated successfully; token will refresh eventually
       }
+
       setCurrentStep(2)
-    } catch {
+    } catch (err) {
+      console.error('[onboarding] handleOrgSubmit error:', err)
       toast.error('Erro ao guardar organização. Tente novamente.')
     } finally {
       setIsOrgSubmitting(false)

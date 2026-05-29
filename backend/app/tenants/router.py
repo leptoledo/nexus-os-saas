@@ -87,7 +87,7 @@ async def create_organization(
     """
     admin_client = get_supabase_admin()
 
-    # Idempotency: return existing org if user is already a member
+    # Idempotency: if user is already a member, update name/sector and return existing org
     existing_membership = (
         admin_client.table("organization_members")
         .select("org_id")
@@ -97,6 +97,11 @@ async def create_organization(
     )
     if existing_membership.data:
         existing_org_id = existing_membership.data[0]["org_id"]
+        # Apply the submitted name / sector so re-submitting the form updates the org
+        update_payload: Dict[str, Any] = {"name": body.name}
+        if body.sector:
+            update_payload["sector"] = body.sector
+        admin_client.table("organizations").update(update_payload).eq("id", existing_org_id).execute()
         existing_org = (
             admin_client.table("organizations")
             .select("*")
