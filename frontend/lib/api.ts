@@ -68,10 +68,14 @@ class ApiClient {
       let fallbackMsg = `Erro ${response.status}: Ocorreu uma falha no servidor.`
       if (response.status === 401) fallbackMsg = 'Sessão expirada ou não autenticada.'
       else if (response.status === 403) fallbackMsg = 'Sem permissões para realizar esta ação.'
-      else if (response.status === 404) fallbackMsg = 'Recurso não encontrado.'
+      else if (response.status === 404) fallbackMsg = 'Serviço temporariamente indisponível.'
       else if (response.status === 409) fallbackMsg = 'Conflito de dados ou registo já existente.'
 
-      throw new Error(error?.detail ?? error?.message ?? fallbackMsg)
+      const rawMsg = error?.detail ?? error?.message
+      const isRawNotFoundError = !rawMsg || typeof rawMsg !== 'string' || rawMsg.toLowerCase().includes('application not found') || rawMsg.toLowerCase().includes('not found')
+      const finalMsg = isRawNotFoundError ? fallbackMsg : rawMsg
+
+      throw new Error(finalMsg)
     }
 
     if (response.status === 204) return undefined as T

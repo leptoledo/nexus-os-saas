@@ -141,6 +141,10 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 
 ## 7. Registro de Alterações (Changelog Automático)
 
+### [2026-07-30] — Correção de Notificação 'Application not found' nas Definições
+* **Resiliência Frontend & API:** Sanitização de erros 404 brutos da Vercel (`Application not found`) em `ApiClient.request()` (`frontend/lib/api.ts`).
+* **Settings Page:** Substituição de chamadas relativas `/backend/` por `apiClient` e inclusão de fallback via `useAuthStore` em `settings/page.tsx` e `useSettings.ts`, garantindo que os dados do perfil (Nome e Email) permaneçam visíveis sem disparar alertas vermelhos de erro.
+
 ### [2026-07-30] — Correção de Deploy Vercel (Monorepo)
 * **Vercel Build Fix:** Configurado `vercel.json` na raiz apontando o comando de build (`cd frontend && npm install && npm run build`) e o diretório de saída (`frontend/.next`), resolvendo falhas de build de diretório em monorepo (Erro `dpl_D11Sif41eZUyS3K6ScGiaGiiNfLT`).
 

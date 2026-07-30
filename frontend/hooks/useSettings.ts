@@ -9,7 +9,13 @@ import type { User } from '@/types'
 export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
-    queryFn: () => authApi.getProfile(),
+    queryFn: async () => {
+      try {
+        return await authApi.getProfile()
+      } catch {
+        return null
+      }
+    },
     staleTime: 300_000,
   })
 }
@@ -29,7 +35,13 @@ export function useUpdateProfile() {
 export function useOrganization() {
   return useQuery({
     queryKey: ['organization'],
-    queryFn: () => tenantsApi.getOrganization(),
+    queryFn: async () => {
+      try {
+        return await tenantsApi.getOrganization()
+      } catch {
+        return null
+      }
+    },
     staleTime: 300_000,
   })
 }
@@ -49,7 +61,13 @@ export function useUpdateOrganization() {
 export function useMembers() {
   return useQuery({
     queryKey: ['members'],
-    queryFn: () => tenantsApi.getMembers(),
+    queryFn: async () => {
+      try {
+        return await tenantsApi.getMembers()
+      } catch {
+        return []
+      }
+    },
     staleTime: 60_000,
   })
 }

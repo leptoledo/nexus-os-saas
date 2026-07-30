@@ -88,15 +88,18 @@ export default function SettingsPage() {
 
   // Profile state
   const { data: profile, isLoading: loadingProfile, refetch: refetchProfile } = useProfile();
+  const authUser = useAuthStore((s) => s.user);
   const updateProfile = useUpdateProfile();
   const [profileName, setProfileName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
+
   useEffect(() => {
-    if (profile) {
-      setProfileName(profile.name ?? "");
-      setProfileEmail(profile.email ?? "");
+    const activeUser = profile || authUser;
+    if (activeUser) {
+      setProfileName(activeUser.name ?? "");
+      setProfileEmail(activeUser.email ?? "");
     }
-  }, [profile]);
+  }, [profile, authUser]);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -118,9 +121,8 @@ export default function SettingsPage() {
   async function handleExportData() {
     setExportLoading(true);
     try {
-      // Trigger data export — backend queues an email with ZIP
-      await fetch('/backend/auth/export', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      toast.success('Exportação solicitada! Receberás um email com o arquivo em breve.');
+      await apiClient.post('/auth/export');
+      toast.success('Exportação solicitada! Receberás um email com os teus dados em breve.');
     } catch {
       toast.success('Exportação solicitada! Receberás um email com os teus dados em breve.');
     } finally {
@@ -137,7 +139,7 @@ export default function SettingsPage() {
     if (!doubleConfirm) return;
     setDeleteLoading(true);
     try {
-      await fetch('/backend/auth/me', { method: 'DELETE' });
+      await apiClient.delete('/auth/me');
       toast.success('Conta eliminada. A redirecionar...');
       setTimeout(() => { window.location.href = '/login'; }, 2000);
     } catch {
@@ -173,11 +175,7 @@ export default function SettingsPage() {
     }
     setPasswordLoading(true);
     try {
-      await fetch('/backend/auth/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ old_password: currentPassword, new_password: newPassword }),
-      });
+      await apiClient.put('/auth/password', { old_password: currentPassword, new_password: newPassword });
       toast.success("Password alterada com sucesso!");
       setCurrentPassword("");
       setNewPassword("");
@@ -193,7 +191,7 @@ export default function SettingsPage() {
     if (!confirmed) return;
     setApiKeyLoading(true);
     try {
-      await fetch('/backend/settings/api-key/regenerate', { method: 'POST' });
+      await apiClient.post('/settings/api-key/regenerate');
       toast.success("Nova chave gerada! Atualiza a página para ver.");
     } catch {
       toast.success("Pedido de regeneração enviado! Atualiza a página.");
@@ -209,11 +207,7 @@ export default function SettingsPage() {
     }
     setWebhookLoading(true);
     try {
-      await fetch('/backend/notifications/webhooks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `Webhook ${webhooks.length + 1}`, url: webhookUrl, events: webhookEvents, active: true }),
-      });
+      await apiClient.post('/notifications/webhooks', { name: `Webhook ${webhooks.length + 1}`, url: webhookUrl, events: webhookEvents, active: true });
       setWebhooks((prev) => [...prev, { id: Date.now().toString(), url: webhookUrl, events: webhookEvents, active: true }]);
       setWebhookUrl("");
       setShowWebhookForm(false);
