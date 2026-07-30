@@ -250,618 +250,220 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 max-w-5xl">
+      {/* Title Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Definições</h1>
-        <p className="text-muted-foreground">Gere o teu perfil, organização e preferências</p>
+        <h1 className="text-2xl font-bold tracking-tight text-white">Configurações</h1>
       </div>
 
-      <Tabs defaultValue="profile" orientation="vertical" className="flex gap-6">
-        <TabsList className="flex flex-col h-auto w-48 shrink-0 gap-1">
-          <TabsTrigger value="profile" className="justify-start"><User className="h-4 w-4 mr-2" />Perfil</TabsTrigger>
-          <TabsTrigger value="organization" className="justify-start"><Building className="h-4 w-4 mr-2" />Organização</TabsTrigger>
-          <TabsTrigger value="members" className="justify-start"><Users className="h-4 w-4 mr-2" />Membros</TabsTrigger>
-          <TabsTrigger value="notifications" className="justify-start"><Bell className="h-4 w-4 mr-2" />Notificações</TabsTrigger>
-          <TabsTrigger value="api" className="justify-start"><Code className="h-4 w-4 mr-2" />API & Webhooks</TabsTrigger>
-          <TabsTrigger value="security" className="justify-start"><Shield className="h-4 w-4 mr-2" />Segurança</TabsTrigger>
-          <TabsTrigger value="gdpr" className="justify-start"><FileText className="h-4 w-4 mr-2" />RGPD</TabsTrigger>
+      {/* Horizontal Tabs Header */}
+      <Tabs defaultValue="geral" className="space-y-6">
+        <TabsList className="bg-transparent border-b border-slate-800/80 w-full justify-start rounded-none h-auto p-0 gap-6">
+          <TabsTrigger
+            value="geral"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-400 data-[state=active]:text-white text-slate-400 text-sm font-medium pb-3 bg-transparent px-1 shadow-none"
+          >
+            Geral
+          </TabsTrigger>
+          <TabsTrigger
+            value="aparencia"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-400 data-[state=active]:text-white text-slate-400 text-sm font-medium pb-3 bg-transparent px-1 shadow-none"
+          >
+            Aparência
+          </TabsTrigger>
+          <TabsTrigger
+            value="preferencias"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-400 data-[state=active]:text-white text-slate-400 text-sm font-medium pb-3 bg-transparent px-1 shadow-none"
+          >
+            Preferências
+          </TabsTrigger>
+          <TabsTrigger
+            value="integracoes"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-400 data-[state=active]:text-white text-slate-400 text-sm font-medium pb-3 bg-transparent px-1 shadow-none"
+          >
+            Integrações
+          </TabsTrigger>
+          <TabsTrigger
+            value="assinatura"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-400 data-[state=active]:text-white text-slate-400 text-sm font-medium pb-3 bg-transparent px-1 shadow-none"
+          >
+            Assinatura
+          </TabsTrigger>
         </TabsList>
 
-        <div className="flex-1 min-w-0">
-          {/* Perfil */}
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Perfil Pessoal</CardTitle>
-                <CardDescription>Informações visíveis para a tua equipa</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {loadingProfile ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">A carregar perfil...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={profile?.avatar_url ?? ""} />
-                          <AvatarFallback className="text-xl">{getInitials(profile?.name ?? "")}</AvatarFallback>
-                        </Avatar>
-                        {avatarLoading && (
-                          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleAvatarChange}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => avatarInputRef.current?.click()}
-                        disabled={avatarLoading}
-                      >
-                        <Camera className="h-4 w-4 mr-2" />
-                        Alterar foto
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Nome completo</Label>
-                        <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} type="email" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Idioma</Label>
-                        <Select defaultValue="pt">
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pt">Português</SelectItem>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="es">Español</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => updateProfile.mutate({ name: profileName, email: profileEmail })}
-                      disabled={updateProfile.isPending}
-                    >
-                      {updateProfile.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                      Guardar alterações
-                    </Button>
-                    <Separator />
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Alterar Password</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Password atual</Label>
-                          <Input
-                            type="password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            placeholder="••••••••"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Nova password</Label>
-                          <Input
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Mínimo 8 caracteres"
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleChangePassword}
-                        disabled={passwordLoading || !currentPassword || !newPassword}
-                      >
-                        {passwordLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                        Alterar password
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Tab 1: Geral / Perfil Público */}
+        <TabsContent value="geral" className="space-y-6 pt-2">
+          <h2 className="text-base font-semibold text-slate-100">Perfil Público</h2>
 
-          {/* Organização */}
-          <TabsContent value="organization">
-            <Card>
-              <CardHeader>
-                <CardTitle>Organização</CardTitle>
-                <CardDescription>Informações da tua empresa</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {loadingOrg ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">A carregar organização...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-4 pb-2">
-                      <div className="relative h-16 w-16 rounded-lg border flex items-center justify-center bg-muted overflow-hidden">
-                        <Building className="h-8 w-8 text-muted-foreground" />
-                        {logoLoading && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-                      <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} disabled={logoLoading}>
-                        <Camera className="h-4 w-4 mr-2" />Carregar logo
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Nome da empresa</Label>
-                        <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Slug (URL)</Label>
-                        <Input defaultValue={org?.slug ?? ""} readOnly className="text-muted-foreground" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Plano</Label>
-                        <Input readOnly value={org?.plan ?? "pro"} className="capitalize text-muted-foreground" />
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => updateOrg.mutate({ name: orgName })}
-                      disabled={updateOrg.isPending}
-                    >
-                      {updateOrg.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                      Guardar
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-xl p-6 shadow-xl space-y-6">
+            {/* Field Row */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="sm:w-1/3 space-y-1">
+                <Label className="text-sm font-semibold text-slate-200">Nome Público</Label>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+                  Seu nome ou apelido exibido em conteúdos que você optar por compartilhar na comunidade.
+                </p>
+              </div>
 
-          {/* Membros */}
-          <TabsContent value="members">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Membros da Equipa</CardTitle>
-                    <CardDescription>Gere os utilizadores da tua organização</CardDescription>
-                  </div>
-                  <Button size="sm" onClick={() => setShowInviteForm(!showInviteForm)}>
-                    <Plus className="h-4 w-4 mr-2" />Convidar
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {showInviteForm && (
-                  <div className="flex gap-2 pb-2">
-                    <Input
-                      placeholder="email@empresa.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                    />
-                    <Select value={inviteRole} onValueChange={setInviteRole}>
-                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="member">Member</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button size="sm" onClick={handleInvite} disabled={inviteMember.isPending}>
-                      {inviteMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar"}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowInviteForm(false)}>✕</Button>
-                  </div>
-                )}
+              <div className="sm:w-2/3 space-y-1.5">
+                <Input
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  placeholder="Nome público"
+                  className="bg-[#090d16] border-slate-700/60 text-slate-100 text-sm focus:border-emerald-500 rounded-lg"
+                />
+                <p className="text-[11px] text-slate-500">Máximo de 32 caracteres permitidos.</p>
+              </div>
+            </div>
 
-                {loadingMembers ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Utilizador</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Membro desde</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {members.map((member: any) => (
-                        <TableRow key={member.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-7 w-7">
-                                <AvatarFallback className="text-xs">{getInitials(member.name ?? member.email)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium text-sm">{member.name ?? "—"}</p>
-                                <p className="text-xs text-muted-foreground">{member.email}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              defaultValue={member.role}
-                              onValueChange={(role) => updateRole.mutate({ userId: member.id, role })}
-                            >
-                              <SelectTrigger className="h-7 w-28"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="owner">Owner</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="manager">Manager</SelectItem>
-                                <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="viewer">Viewer</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={member.role === "owner" || member.role ? "default" : "secondary"}>
-                              Ativo
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {formatDate(member.created_at)}
-                          </TableCell>
-                          <TableCell>
-                            {member.role !== "owner" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive h-7 w-7 p-0"
-                                onClick={() => removeMember.mutate(member.id)}
-                                disabled={removeMember.isPending}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+            {/* Email Field Row */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 pt-4 border-t border-slate-800/60">
+              <div className="sm:w-1/3 space-y-1">
+                <Label className="text-sm font-semibold text-slate-200">Email da Conta</Label>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+                  Endereço de email principal associado à sua conta e notificações.
+                </p>
+              </div>
 
-          {/* Notificações */}
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Notificação</CardTitle>
-                <CardDescription>Escolhe como e quando recebes notificações</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-sm">Canais</h3>
-                  {[
-                    { key: "inApp", label: "In-app", desc: "Notificações dentro da plataforma" },
-                    { key: "email", label: "Email", desc: "Receber por email" },
-                    { key: "whatsapp", label: "WhatsApp", desc: "Receber via WhatsApp" },
-                  ].map(({ key, label, desc }) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <div><p className="font-medium text-sm">{label}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
-                      <Switch
-                        checked={notifications[key as keyof typeof notifications]}
-                        onCheckedChange={(v) => setNotifications((p) => ({ ...p, [key]: v }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Separator />
-                <div className="space-y-4">
-                  <h3 className="font-medium text-sm">Categorias</h3>
-                  {[
-                    { key: "marketing", label: "Marketing" },
-                    { key: "projects", label: "Projetos" },
-                    { key: "analytics", label: "Analytics" },
-                    { key: "billing", label: "Faturação" },
-                  ].map(({ key, label }) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <p className="text-sm">{label}</p>
-                      <Switch
-                        checked={notifications[key as keyof typeof notifications]}
-                        onCheckedChange={(v) => setNotifications((p) => ({ ...p, [key]: v }))}
-                      />
-                    </div>
-                  ))}
+              <div className="sm:w-2/3 space-y-1.5">
+                <Input
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  className="bg-[#090d16] border-slate-700/60 text-slate-100 text-sm focus:border-emerald-500 rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* Alterar Password Row */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 pt-4 border-t border-slate-800/60">
+              <div className="sm:w-1/3 space-y-1">
+                <Label className="text-sm font-semibold text-slate-200">Alterar Password</Label>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+                  Atualize sua senha de acesso para manter a segurança da conta.
+                </p>
+              </div>
+
+              <div className="sm:w-2/3 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Password atual"
+                    className="bg-[#090d16] border-slate-700/60 text-slate-100 text-sm focus:border-emerald-500 rounded-lg"
+                  />
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Nova password (mín. 8)"
+                    className="bg-[#090d16] border-slate-700/60 text-slate-100 text-sm focus:border-emerald-500 rounded-lg"
+                  />
                 </div>
                 <Button
-                  onClick={() => {
-                    // Map frontend UI state → backend NotificationPreferences schema
-                    const payload = {
-                      email_enabled: notifications.email,
-                      push_enabled: notifications.inApp,
-                      whatsapp_enabled: notifications.whatsapp,
-                      digest_frequency: 'realtime',
-                      notify_on: {
-                        task_assigned: notifications.projects,
-                        task_due: notifications.projects,
-                        mention: notifications.inApp,
-                        campaign_sent: notifications.marketing,
-                        lead_stage_changed: notifications.marketing,
-                        billing_alert: notifications.billing,
-                        team_invite: true,
-                        sprint_started: notifications.projects,
-                        sprint_closed: notifications.projects,
-                        anomaly_detected: notifications.analytics,
-                      },
-                    }
-                    notificationsApi.updatePreferences(payload)
-                      .then(() => toast.success('Preferências guardadas!'))
-                      .catch((e: any) => toast.error(e?.message ?? 'Erro ao guardar'))
-                  }}
+                  variant="outline"
+                  size="sm"
+                  onClick={handleChangePassword}
+                  disabled={passwordLoading || !currentPassword || !newPassword}
+                  className="border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 text-xs"
                 >
-                  Guardar preferências
+                  {passwordLoading ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : null}
+                  Alterar password
                 </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* API & Webhooks */}
-          <TabsContent value="api">
-            <Card>
-              <CardHeader>
-                <CardTitle>API & Webhooks</CardTitle>
-                <CardDescription>Integra o NexusOS com sistemas externos</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Chave de API</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      readOnly
-                      value={apiKeyVisible ? apiKey : "nxs_live_sk_••••••••••••••••••••••••••••••"}
-                      className="font-mono text-sm flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      title={apiKeyVisible ? "Ocultar" : "Mostrar"}
-                      onClick={() => setApiKeyVisible((v) => !v)}
-                    >
-                      {apiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      title="Copiar chave"
-                      onClick={() => {
-                        navigator.clipboard.writeText(apiKey)
-                          .then(() => toast.success("Chave copiada!"))
-                          .catch(() => toast.error("Erro ao copiar"))
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      title="Regenerar chave"
-                      disabled={apiKeyLoading}
-                      onClick={handleRegenerateAPIKey}
-                    >
-                      {apiKeyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Nunca partilhes esta chave. Usa-a no header:{" "}
-                    <code className="bg-muted px-1 rounded">Authorization: Bearer &lt;chave&gt;</code>
-                  </p>
-                </div>
-                <Separator />
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium">Webhooks</h3>
-                    <Button size="sm" variant="outline" onClick={() => setShowWebhookForm((v) => !v)}>
-                      <Plus className="h-4 w-4 mr-1" />Adicionar
-                    </Button>
-                  </div>
-                  {showWebhookForm && (
-                    <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">URL do Endpoint</Label>
-                        <Input
-                          placeholder="https://seusite.com/webhook"
-                          value={webhookUrl}
-                          onChange={(e) => setWebhookUrl(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Evento (exemplo)</Label>
-                        <Input
-                          placeholder="task.created"
-                          value={webhookEvents[0]}
-                          onChange={(e) => setWebhookEvents([e.target.value])}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={handleAddWebhook} disabled={webhookLoading}>
-                          {webhookLoading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                          Guardar
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setShowWebhookForm(false)}>
-                          <X className="h-3.5 w-3.5 mr-1" />Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {webhooks.length === 0 ? (
-                    <div className="rounded-2xl border-2 border-dashed border-gray-200 py-10 text-center dark:border-gray-700">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950">
-                        <Code className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                      </div>
-                      <p className="font-semibold text-gray-900 dark:text-white">Nenhum webhook configurado</p>
-                      <p className="mt-1 text-sm text-muted-foreground">Adiciona um endpoint para receber eventos em tempo real.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {webhooks.map((wh) => (
-                        <div key={wh.id} className="flex items-center justify-between rounded-lg border p-3">
-                          <div>
-                            <p className="text-sm font-mono truncate max-w-xs">{wh.url}</p>
-                            <p className="text-xs text-muted-foreground">{wh.events.join(", ")}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={wh.active ? "default" : "secondary"} className="text-xs">
-                              {wh.active ? "Ativo" : "Inativo"}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-destructive"
-                              onClick={() => setWebhooks((prev) => prev.filter((w) => w.id !== wh.id))}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>Documentação da API</Label>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href="/docs" target="_blank">Ver documentação Swagger →</a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Segurança */}
-          <TabsContent value="security">
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Autenticação Multifator (MFA)</CardTitle>
-                  <CardDescription>Adiciona uma camada extra de segurança</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">MFA via app autenticadora (TOTP)</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {profile?.is_mfa_enabled ? "MFA ativo" : "Recomendado para todos os admins"}
-                    </p>
-                  </div>
-                  <Button
-                    variant={profile?.is_mfa_enabled ? "destructive" : "outline"}
-                    onClick={() => setShowMFA(true)}
-                  >
-                    {profile?.is_mfa_enabled ? "Desativar MFA" : "Ativar MFA"}
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sessões Ativas</CardTitle>
-                  <CardDescription>Dispositivos com sessão iniciada</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {mockSessions.map((session, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="text-sm font-medium">{session.device}</p>
-                        <p className="text-xs text-muted-foreground">{session.location} · {session.lastActive}</p>
-                      </div>
-                      {session.current
-                        ? <Badge variant="outline">Esta sessão</Badge>
-                        : <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive text-xs"
-                            onClick={() => handleTerminateSession(session.device)}
-                          >
-                            Terminar
-                          </Button>
-                      }
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              </div>
             </div>
-          </TabsContent>
 
-          {/* RGPD */}
-          <TabsContent value="gdpr">
-            <Card>
-              <CardHeader>
-                <CardTitle>Privacidade & RGPD</CardTitle>
-                <CardDescription>Gere os teus dados pessoais em conformidade com o RGPD</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 border rounded-lg space-y-2">
-                  <p className="font-medium text-sm">Exportar os meus dados</p>
-                  <p className="text-xs text-muted-foreground">
-                    Recebe um arquivo ZIP com todos os dados associados à tua conta (perfil, projetos, mensagens).
-                  </p>
-                  <Button variant="outline" size="sm" onClick={handleExportData} disabled={exportLoading}>
-                    {exportLoading
-                      ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      : <Download className="h-4 w-4 mr-2" />
-                    }
-                    Solicitar exportação
-                  </Button>
-                </div>
-                <div className="p-4 border rounded-lg space-y-2">
-                  <p className="font-medium text-sm">Gestão de consentimentos</p>
-                  <div className="space-y-2">
-                    {[
-                      { label: "Comunicações de marketing", value: true },
-                      { label: "Análise de utilização (analytics)", value: true },
-                      { label: "Partilha de dados com parceiros", value: false },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex items-center justify-between">
-                        <p className="text-sm">{label}</p>
-                        <Switch defaultChecked={value} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-4 border border-destructive/20 rounded-lg space-y-2 bg-destructive/5">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <p className="font-medium text-sm text-destructive">Zona Perigosa</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    A eliminação da conta é permanente e irrevogável. Todos os dados serão apagados.
-                  </p>
-                  <Button variant="destructive" size="sm" onClick={handleDeleteAccount} disabled={deleteLoading}>
-                    {deleteLoading
-                      ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      : <UserX className="h-4 w-4 mr-2" />
-                    }
-                    Eliminar a minha conta
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </div>
+            {/* Footer with Mint Green Save Button */}
+            <div className="pt-4 border-t border-slate-800/60 flex justify-end">
+              <Button
+                onClick={() => {
+                  updateProfile.mutate({ name: profileName, email: profileEmail })
+                  toast.success("Salvo com sucesso!")
+                }}
+                disabled={updateProfile.isPending}
+                className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold text-sm px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-500/20 transition-all duration-200"
+              >
+                {updateProfile.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Salvar Alterações
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab 2: Aparência */}
+        <TabsContent value="aparencia" className="space-y-6 pt-2">
+          <h2 className="text-base font-semibold text-slate-100">Personalização de Aparência</h2>
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-xl p-6 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <Label className="text-sm font-semibold text-slate-200">Logo da Empresa</Label>
+                <p className="text-xs text-slate-400">Imagem que aparecerá nos relatórios e faturas da agência.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} className="border-slate-700 text-slate-300">
+                  <Camera className="h-4 w-4 mr-2" /> Alterar Logo
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab 3: Preferências */}
+        <TabsContent value="preferencias" className="space-y-6 pt-2">
+          <h2 className="text-base font-semibold text-slate-100">Preferências de Notificação</h2>
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Notificações por Email</p>
+                <p className="text-xs text-slate-400">Receber alertas de tarefas e relatórios por email.</p>
+              </div>
+              <Switch checked={notifications.email} onCheckedChange={(v) => setNotifications((n) => ({ ...n, email: v }))} />
+            </div>
+            <div className="flex items-center justify-between py-2 border-t border-slate-800/60">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Alertas WhatsApp</p>
+                <p className="text-xs text-slate-400">Receber avisos imediatos de leads via WhatsApp.</p>
+              </div>
+              <Switch checked={notifications.whatsapp} onCheckedChange={(v) => setNotifications((n) => ({ ...n, whatsapp: v }))} />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab 4: Integrações */}
+        <TabsContent value="integracoes" className="space-y-6 pt-2">
+          <h2 className="text-base font-semibold text-slate-100">Chaves de API & Webhooks</h2>
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-xl p-6 shadow-xl space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-200">Chave de API (Live)</Label>
+              <div className="flex gap-2">
+                <Input readOnly type={apiKeyVisible ? "text" : "password"} value={apiKey} className="bg-[#090d16] border-slate-700/60 text-slate-300 font-mono text-xs" />
+                <Button variant="outline" size="sm" onClick={() => setApiKeyVisible(!apiKeyVisible)} className="border-slate-700">
+                  {apiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(apiKey); toast.success("Copiado!"); }} className="border-slate-700">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab 5: Assinatura */}
+        <TabsContent value="assinatura" className="space-y-6 pt-2">
+          <h2 className="text-base font-semibold text-slate-100">Plano & Assinatura</h2>
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Plano Atual</p>
+                <p className="text-xs text-slate-400">Plano Business — Acesso Ilimitado</p>
+              </div>
+              <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Ativo</Badge>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       <MFAModal

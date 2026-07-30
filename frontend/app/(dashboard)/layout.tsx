@@ -9,25 +9,30 @@ import {
   BarChart3,
   Bell,
   Bot,
-  ChevronLeft,
-  ChevronRight,
+  Calendar,
   CreditCard,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageSquare,
-  Moon,
   Settings,
-  Sun,
   TrendingUp,
-  User,
   X,
   Zap,
   Layers,
   Search,
   Sparkles,
+  BookOpen,
+  FileText,
+  Users,
+  PenTool,
+  ShieldAlert,
+  Upload,
+  Globe,
+  UserCheck,
+  FileCode,
+  HelpCircle,
   CheckCheck,
-  ArrowRight,
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationsApi } from '@/lib/api'
@@ -35,66 +40,41 @@ import { useAuthStore } from '@/stores/auth'
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications'
 import { CommandPalette } from '@/components/shared/CommandPalette'
 import { FirstRunModal } from '@/components/shared/FirstRunModal'
-import { CreateProjectModal } from '@/components/projects/CreateProjectModal'
-import { CreateCampaignModal } from '@/components/marketing/CreateCampaignModal'
-import { CreateLeadModal } from '@/components/marketing/CreateLeadModal'
 import { cn, getInitials } from '@/lib/utils'
 
-const NAV_ITEMS = [
+const GERAL_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/marketing', label: 'Marketing', icon: TrendingUp },
-  { href: '/projects', label: 'Projetos', icon: Layers },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/whatsapp', label: 'WhatsApp Bot', icon: Bot },
-  { href: '/ai', label: 'NexusAI', icon: Sparkles },
-  { href: '/notifications', label: 'Notificações', icon: Bell },
+  { href: '/marketing', label: 'Calendário', icon: Calendar },
+  { href: '/analytics', label: 'Relatórios', icon: BarChart3 },
+  { href: '/marketing', label: 'Trades', icon: TrendingUp },
+  { href: '/projects', label: 'Diário', icon: BookOpen },
+  { href: '/analytics', label: 'Notebook', icon: FileText },
+  { href: '/whatsapp', label: 'Comunidade', icon: Users },
+  { href: '/ai', label: 'Escrever no Blog', icon: PenTool },
+  { href: '/billing', label: 'Contas', icon: CreditCard },
+  { href: '/notifications', label: 'Gestão de Risco', icon: ShieldAlert },
+  { href: '/settings', label: 'Importar', icon: Upload },
   { href: '/settings', label: 'Configurações', icon: Settings },
-  { href: '/billing', label: 'Billing', icon: CreditCard },
 ]
 
-const PLAN_BADGE: Record<string, { label: string; class: string }> = {
-  starter: { label: 'Starter', class: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-  pro: { label: 'Pro', class: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' },
-  business: { label: 'Business', class: 'bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300' },
-}
+const ADMIN_NAV_ITEMS = [
+  { href: '/dashboard', label: 'Painel Geral', icon: LayoutDashboard },
+  { href: '/marketing', label: 'Landing Page', icon: Globe },
+  { href: '/settings', label: 'Gestão de Usuários', icon: UserCheck },
+  { href: '/ai', label: 'Blog Admin', icon: FileCode },
+  { href: '/notifications', label: 'Aprovar Depoimentos', icon: MessageSquare },
+]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, organization, logout } = useAuthStore()
   const { unreadCount } = useRealtimeNotifications()
-  const { theme, setTheme } = useTheme()
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [createProjectOpen, setCreateProjectOpen] = useState(false)
-  const [createCampaignOpen, setCreateCampaignOpen] = useState(false)
-  const [createLeadOpen, setCreateLeadOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const queryClient = useQueryClient()
-
-  // Notifications dropdown data
-  const { data: notifData } = useQuery({
-    queryKey: ['notifications', 'dropdown'],
-    queryFn: () => notificationsApi.getNotifications({ unread: true }),
-    staleTime: 30_000,
-    enabled: notifOpen,
-  })
-  const dropdownNotifs = (notifData?.data ?? []).slice(0, 5) as any[]
-
-  const markRead = useMutation({
-    mutationFn: (id: string) => notificationsApi.markRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-    },
-  })
-  const markAllRead = useMutation({
-    mutationFn: () => notificationsApi.markAllRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-    },
-  })
 
   // ⌘K shortcut
   useEffect(() => {
@@ -108,10 +88,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const planBadge = PLAN_BADGE[organization?.plan ?? 'starter']
-
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen overflow-hidden bg-[#090d16] text-slate-100 font-sans antialiased">
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {mobileOpen && (
@@ -119,314 +97,210 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/70 lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar - Collapsed by default (w-16), expands on hover (w-64) */}
       <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-full flex-col bg-gray-900 transition-all duration-300 dark:bg-gray-950 lg:relative lg:z-auto',
-          sidebarCollapsed ? 'w-16' : 'w-64',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          'fixed left-0 top-0 z-50 flex h-full flex-col bg-[#070a11] border-r border-slate-800/60 backdrop-blur-md transition-all duration-300 ease-in-out lg:relative lg:z-auto',
+          isHovered ? 'w-64 shadow-2xl shadow-black/80' : 'w-16',
+          mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* Logo */}
-        <div className={cn('flex h-16 items-center border-b border-gray-800 px-4', sidebarCollapsed ? 'justify-center' : 'justify-between')}>
-          {!sidebarCollapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-white">NexusOS</span>
-            </Link>
-          )}
-          {sidebarCollapsed && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
-              <Zap className="h-4 w-4 text-white" />
+        {/* Logo / Brand Header */}
+        <div className="flex h-14 items-center px-4 border-b border-slate-800/40">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <Zap className="h-4 w-4 fill-emerald-400" />
             </div>
-          )}
-
-          {/* Collapse toggle (desktop) */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={cn(
-              'hidden rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white lg:flex',
-              sidebarCollapsed && 'absolute -right-3 top-16 rounded-full border border-gray-700 bg-gray-900 p-0.5'
+            {(isHovered || mobileOpen) && (
+              <span className="text-base font-bold tracking-tight text-white">NexusOS</span>
             )}
-          >
-            {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </button>
-
-          {/* Mobile close */}
+          </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-md p-1 text-gray-400 hover:text-white lg:hidden"
+            className="ml-auto text-slate-400 hover:text-white lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Plan badge */}
-        {!sidebarCollapsed && planBadge && (
-          <div className="px-4 pt-3">
-            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', planBadge.class)}>
-              {planBadge.label}
-            </span>
+        {/* Navigation items */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 no-scrollbar space-y-4">
+          {/* Section GERAL */}
+          <div>
+            {(isHovered || mobileOpen) && (
+              <p className="px-4 pb-1.5 text-[10px] font-extrabold tracking-wider text-purple-400 uppercase">
+                Geral
+              </p>
+            )}
+            <ul className="space-y-0.5 px-2">
+              {GERAL_NAV_ITEMS.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href
+                return (
+                  <li key={item.label + item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      title={!isHovered ? item.label : undefined}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-2.5 py-2 text-xs transition-all duration-200',
+                        !isHovered && !mobileOpen ? 'justify-center' : '',
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                          : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-200 border border-transparent'
+                      )}
+                    >
+                      <Icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-emerald-400' : 'text-slate-400')} />
+                      {(isHovered || mobileOpen) && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
-        )}
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    title={sidebarCollapsed ? item.label : undefined}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-                      sidebarCollapsed ? 'justify-center' : '',
-                      isActive
-                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    )}
-                  >
-                    <Icon className="h-4.5 w-4.5 flex-shrink-0" size={18} />
-                    {!sidebarCollapsed && <span>{item.label}</span>}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          {/* Section ADMINISTRAÇÃO */}
+          <div>
+            {(isHovered || mobileOpen) && (
+              <p className="px-4 pb-1.5 text-[10px] font-extrabold tracking-wider text-purple-400 uppercase">
+                Administração
+              </p>
+            )}
+            <ul className="space-y-0.5 px-2">
+              {ADMIN_NAV_ITEMS.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href && item.label === 'Gestão de Usuários'
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      title={!isHovered ? item.label : undefined}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-2.5 py-2 text-xs transition-all duration-200',
+                        !isHovered && !mobileOpen ? 'justify-center' : '',
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                          : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-200 border border-transparent'
+                      )}
+                    >
+                      <Icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-emerald-400' : 'text-slate-400')} />
+                      {(isHovered || mobileOpen) && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         </nav>
 
-        {/* User section */}
-        <div className={cn('border-t border-gray-800 p-3', sidebarCollapsed ? 'flex justify-center' : '')}>
-          {sidebarCollapsed ? (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-              {getInitials(user?.name || user?.email || 'U')}
+        {/* User Footer */}
+        <div className="border-t border-slate-800/40 p-2.5">
+          {(!isHovered && !mobileOpen) ? (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white mx-auto">
+              {getInitials(user?.name || user?.email || 'L')}
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
-                {getInitials(user?.name || user?.email || 'U')}
+            <div className="flex items-center gap-2.5 px-2 py-1">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                {getInitials(user?.name || user?.email || 'L')}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
-                <p className="truncate text-xs text-gray-400">{user?.email}</p>
+                <p className="truncate text-xs font-semibold text-slate-100">{user?.name || 'Leandro Toledo'}</p>
+                <p className="truncate text-[10px] text-slate-400">{user?.email || 'leptoledo@hotmail.com'}</p>
               </div>
               <button
                 onClick={logout}
-                className="rounded-md p-1 text-gray-400 hover:text-red-400"
+                className="text-slate-400 hover:text-red-400 p-1"
                 title="Sair"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
-          <div className="flex items-center gap-3">
-            {/* Mobile menu button */}
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden bg-[#090d16]">
+        {/* Topbar Header */}
+        <header className="flex h-14 items-center justify-between border-b border-slate-800/60 bg-[#090d16] px-4 sm:px-6">
+          {/* Breadcrumb Trail */}
+          <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
+              className="mr-1 text-slate-400 hover:text-white lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
+            <div className="flex items-center gap-2 text-slate-400">
+              <div className="h-5 w-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                <Zap className="h-3 w-3" />
+              </div>
+              <span className="text-slate-400 font-medium">/ Trader Journal</span>
+              <span className="bg-amber-950/80 text-amber-300 border border-amber-500/50 text-[10px] font-extrabold px-1.5 py-0.5 rounded tracking-wide">
+                OURO
+              </span>
+              <span className="text-slate-500">/</span>
+              <span className="text-white font-semibold capitalize">
+                {pathname.replace('/', '') || 'Dashboard'}
+              </span>
+            </div>
+          </div>
 
-            {/* Search / Command palette */}
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-3">
+            <a href="#" className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors">
+              Feedback
+            </a>
+
+            {/* Search Input Pill */}
             <button
               onClick={() => setCommandOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 transition-colors hover:border-indigo-300 hover:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-indigo-600"
+              className="flex items-center gap-2 rounded-full border border-slate-800 bg-[#0d121f] px-3 py-1 text-xs text-slate-400 hover:border-slate-700 hover:text-slate-200 transition-colors"
             >
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Pesquisar...</span>
-              <kbd className="hidden rounded border border-gray-200 px-1.5 py-0.5 text-xs dark:border-gray-700 sm:inline">
+              <Search className="h-3.5 w-3.5" />
+              <span>Search...</span>
+              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.2 text-[10px]">
                 ⌘K
               </kbd>
             </button>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* Theme toggle */}
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-            >
-              <Sun className="h-4 w-4 dark:hidden" />
-              <Moon className="hidden h-4 w-4 dark:block" />
+            {/* Help Icon */}
+            <button className="text-slate-400 hover:text-slate-200 p-1">
+              <HelpCircle className="h-4 w-4" />
             </button>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false) }}
-                className="relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
+            {/* Notification Bell */}
+            <button className="relative text-slate-400 hover:text-slate-200 p-1">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#090d16]"></span>
+              )}
+            </button>
 
-              <AnimatePresence>
-                {notifOpen && (
-                  <>
-                    {/* Backdrop */}
-                    <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
-                    >
-                      {/* Header */}
-                      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
-                        <p className="font-semibold text-sm text-gray-900 dark:text-white">
-                          Notificações
-                          {unreadCount > 0 && (
-                            <span className="ml-2 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600 dark:bg-red-950 dark:text-red-400">
-                              {unreadCount}
-                            </span>
-                          )}
-                        </p>
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={() => markAllRead.mutate()}
-                            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-                          >
-                            <CheckCheck className="h-3 w-3" /> Marcar todas
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Notification list */}
-                      <div className="max-h-72 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-800">
-                        {dropdownNotifs.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-gray-400">
-                            <Bell className="mx-auto h-6 w-6 mb-2 opacity-30" />
-                            Sem notificações por ler
-                          </div>
-                        ) : (
-                          dropdownNotifs.map((n: any) => (
-                            <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                              <div className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-indigo-500" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{n.title}</p>
-                                {n.body && <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{n.body}</p>}
-                              </div>
-                              <button
-                                onClick={() => markRead.mutate(n.id)}
-                                className="flex-shrink-0 text-gray-300 hover:text-indigo-600 dark:text-gray-600 dark:hover:text-indigo-400"
-                              >
-                                <CheckCheck className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      <div className="border-t border-gray-100 px-4 py-2.5 dark:border-gray-800">
-                        <Link
-                          href="/notifications"
-                          onClick={() => setNotifOpen(false)}
-                          className="flex items-center justify-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium"
-                        >
-                          Ver todas as notificações <ArrowRight className="h-3 w-3" />
-                        </Link>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Avatar / Profile dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false) }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white transition-opacity hover:opacity-90"
-              >
-                {getInitials(user?.name || user?.email || 'U')}
-              </button>
-
-              <AnimatePresence>
-                {profileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-900"
-                  >
-                    <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
-                      <p className="font-semibold text-gray-900 dark:text-white">{user?.name}</p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
-                    <Link
-                      href="/settings"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-                    >
-                      <User className="h-4 w-4" /> Perfil
-                    </Link>
-                    <Link
-                      href="/settings"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-                    >
-                      <Settings className="h-4 w-4" /> Definições
-                    </Link>
-                    <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-                    <button
-                      onClick={() => { setProfileOpen(false); logout() }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                    >
-                      <LogOut className="h-4 w-4" /> Sair
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* User Avatar Circle */}
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white border border-indigo-400/30">
+              {getInitials(user?.name || user?.email || 'L')}
             </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto p-6 bg-[#090d16]">
           {children}
         </main>
       </div>
 
-      {/* Command Palette */}
-      <CommandPalette
-        open={commandOpen}
-        onClose={() => setCommandOpen(false)}
-        onCreateProject={() => setCreateProjectOpen(true)}
-        onCreateCampaign={() => setCreateCampaignOpen(true)}
-        onCreateLead={() => setCreateLeadOpen(true)}
-      />
-
-      {/* Global create modals (triggered from CommandPalette) */}
-      <CreateProjectModal open={createProjectOpen} onClose={() => setCreateProjectOpen(false)} />
-      <CreateCampaignModal open={createCampaignOpen} onClose={() => setCreateCampaignOpen(false)} />
-      <CreateLeadModal open={createLeadOpen} onClose={() => setCreateLeadOpen(false)} />
-
-      {/* First-run: ask for name if not set */}
+      <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} />
       <FirstRunModal />
     </div>
   )

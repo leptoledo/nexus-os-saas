@@ -141,6 +141,11 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 
 ## 7. Registro de Alterações (Changelog Automático)
 
+### [2026-07-30] — Redesign Visual do Layout & Tema (Dark Navy & Mint Green)
+* **Sidebar Hover Expandable:** Reformulada a barra lateral para permanecer colapsada (`w-16`) por padrão e expandir suavemente (`w-64`) ao passar o mouse (`hover`), com menus categorizados (`GERAL` e `ADMINISTRAÇÃO` em maiúsculas roxas) e destaques em verde menta (`#00e699`).
+* **Novo Cabeçalho (Topbar):** Breadcrumbs com badge `OURO`, barra de busca compacta `Search... ⌘K`, botões de ajuda/notificações e avatar de utilizador.
+* **Página de Configurações (`/settings`):** Reestruturada com abas horizontais (`Geral`, `Aparência`, `Preferências`, `Integrações`, `Assinatura`), cartões em tom navy escuro (`#0f1422`) e botão de ação `Salvar Alterações` em verde menta.
+
 ### [2026-07-30] — Correção de Notificação 'Application not found' nas Definições
 * **Resiliência Frontend & API:** Sanitização de erros 404 brutos da Vercel (`Application not found`) em `ApiClient.request()` (`frontend/lib/api.ts`).
 * **Settings Page:** Substituição de chamadas relativas `/backend/` por `apiClient` e inclusão de fallback via `useAuthStore` em `settings/page.tsx` e `useSettings.ts`, garantindo que os dados do perfil (Nome e Email) permaneçam visíveis sem disparar alertas vermelhos de erro.
