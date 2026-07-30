@@ -101,6 +101,7 @@ $RECYCLE.BIN/
 # -----------------------------------------------------------------------------
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -127,3 +128,4 @@ supabase/functions/.eszip
 *.pfx
 tmp/
 temp/
+.vercel

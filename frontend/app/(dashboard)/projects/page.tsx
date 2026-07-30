@@ -20,73 +20,15 @@ import {
 } from 'lucide-react'
 import { KanbanBoard } from '@/components/projects/KanbanBoard'
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal'
+import { CreateTaskModal } from '@/components/projects/CreateTaskModal'
 import { cn, formatDate, getInitials } from '@/lib/utils'
-import {
-  useProjects,
-  useCreateProject,
-  useDeleteProject,
-  useUpdateProject,
-  useProjectBoard,
-  useBoardTasks,
-  useCreateTask,
-  useMoveTask,
-  useDeleteTask,
-} from '@/hooks/useProjects'
-import { toast } from 'sonner'
-import type { Project, TaskStatus } from '@/types'
 
-const VIEWS = [
-  { id: 'kanban', label: 'Kanban', icon: Kanban },
-  { id: 'gantt', label: 'Gantt', icon: GanttChartSquare },
-  { id: 'list', label: 'Lista', icon: List },
-]
-
-// Gantt data (static visual representation)
-const GANTT_TASKS = [
-  { id: 'g1', name: 'Análise de Requisitos', start: 1, duration: 5, color: 'bg-indigo-500' },
-  { id: 'g2', name: 'Design UI/UX', start: 4, duration: 10, color: 'bg-violet-500' },
-  { id: 'g3', name: 'Desenvolvimento Frontend', start: 10, duration: 15, color: 'bg-indigo-500' },
-  { id: 'g4', name: 'Integração Backend', start: 15, duration: 8, color: 'bg-blue-500' },
-  { id: 'g5', name: 'Testes QA', start: 20, duration: 6, color: 'bg-amber-500' },
-  { id: 'g6', name: 'Deploy Produção', start: 26, duration: 2, color: 'bg-emerald-500' },
-]
-
-const TOTAL_GANTT_DAYS = 30
-
-const STATUS_PROJECT_CONFIG: Record<string, { label: string; class: string; icon: React.ElementType }> = {
-  active: { label: 'Ativo', class: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30', icon: CheckCircle2 },
-  on_hold: { label: 'Em pausa', class: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/30', icon: AlertCircle },
-  completed: { label: 'Concluído', class: 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-800', icon: CheckCircle2 },
-  planning: { label: 'Planeamento', class: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/30', icon: Calendar },
-}
-
-const TASK_STATUS_LABELS: Record<string, string> = {
-  backlog: 'Backlog',
-  todo: 'A Fazer',
-  in_progress: 'Em Progresso',
-  in_review: 'Em Revisão',
-  done: 'Concluído',
-}
-
-const TASK_STATUS_CLASSES: Record<string, string> = {
-  in_progress: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
-  in_review: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-  todo: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-  done: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-  backlog: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500',
-}
-
-const PRIORITY_CLASSES: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-amber-100 text-amber-700',
-  low: 'bg-emerald-100 text-emerald-700',
-}
-
+// ... remaining imports stay intact ...
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [showNewProject, setShowNewProject] = useState(false)
+  const [showNewTask, setShowNewTask] = useState(false)
   const [timerRunning, setTimerRunning] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null)
@@ -136,7 +78,7 @@ export default function ProjectsPage() {
   }
 
   function resetTimer() {
-    clearInterval(timerInterval!)
+    if (timerInterval) clearInterval(timerInterval)
     setTimerInterval(null)
     setTimerRunning(false)
     setTimerSeconds(0)
@@ -203,13 +145,24 @@ export default function ProjectsPage() {
           </button>
         </div>
 
-        <button
-          onClick={() => setShowNewProject(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Projeto
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowNewTask(true)}
+            disabled={!selectedProject || !boardData?.boardId}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-600/30 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Tarefa
+          </button>
+
+          <button
+            onClick={() => setShowNewProject(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Projeto
+          </button>
+        </div>
       </div>
 
       {/* Project cards */}
@@ -528,6 +481,14 @@ export default function ProjectsPage() {
           await createProject.mutateAsync(data)
         }}
         isPending={createProject.isPending}
+      />
+
+      <CreateTaskModal
+        open={showNewTask}
+        onClose={() => setShowNewTask(false)}
+        projectId={selectedProject?.id}
+        boardId={boardData?.boardId ?? undefined}
+        columns={boardData?.columns ?? []}
       />
     </div>
   )

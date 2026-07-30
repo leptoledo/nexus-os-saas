@@ -223,7 +223,10 @@ async def upsert_config(
         data["auth_token_encrypted"] = body.auth_token  # TODO: encrypt in prod
 
     res = admin.table("whatsapp_configs").upsert(data, on_conflict="org_id").execute()
-    return res.data[0] if res.data else data
+    result = res.data[0] if res.data else data
+    if isinstance(result, dict) and "auth_token_encrypted" in result:
+        result["auth_token_encrypted"] = "••••••••"
+    return result
 
 
 @router.post("/config/test")

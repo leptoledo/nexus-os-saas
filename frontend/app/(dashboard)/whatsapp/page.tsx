@@ -14,7 +14,7 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import {
   MessageSquare, Plus, Play, Pause, Send, User, Bot, CheckCheck,
   BarChart2, Workflow, Inbox, Settings, PhoneCall, Activity, Timer,
-  Zap, Loader2
+  Zap, Loader2, Sparkles
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -30,6 +30,7 @@ import { CreateFlowModal } from "@/components/whatsapp/CreateFlowModal";
 import { EditFlowModal } from "@/components/whatsapp/EditFlowModal";
 import { ProactiveMsgModal } from "@/components/whatsapp/ProactiveMsgModal";
 import { AssignAgentModal } from "@/components/whatsapp/AssignAgentModal";
+import { WhatsAppSimulatorModal } from "@/components/whatsapp/WhatsAppSimulatorModal";
 
 function getInitials(name: string): string {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -50,6 +51,7 @@ export default function WhatsAppPage() {
   const [editingFlow, setEditingFlow] = useState<typeof flows[0] | null>(null);
   const [showProactive, setShowProactive] = useState(false);
   const [showAssignAgent, setShowAssignAgent] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [configProvider, setConfigProvider] = useState<'twilio' | 'meta'>('meta');
   const [configSaved, setConfigSaved] = useState(false);
   const [configNumber, setConfigNumber] = useState("");
@@ -131,6 +133,15 @@ export default function WhatsAppPage() {
           <p className="text-muted-foreground">Automação de conversas e atendimento inteligente</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSimulator(true)}
+            className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium"
+          >
+            <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
+            Testar Bot (Simulador)
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowProactive(true)}><Send className="h-4 w-4 mr-2" />Mensagem Proativa</Button>
           <Button size="sm" onClick={() => setShowNewFlow(true)}><Plus className="h-4 w-4 mr-2" />Novo Fluxo</Button>
         </div>
@@ -517,6 +528,7 @@ export default function WhatsAppPage() {
         onClose={() => setShowAssignAgent(false)}
         conversationId={selectedConvId}
       />
+      <WhatsAppSimulatorModal open={showSimulator} onClose={() => setShowSimulator(false)} />
     </div>
   );
 }

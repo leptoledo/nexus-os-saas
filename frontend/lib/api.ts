@@ -64,12 +64,18 @@ class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }))
-      throw new Error(error.detail ?? error.message ?? `HTTP ${response.status}`)
+      const error = await response.json().catch(() => ({ message: null }))
+      let fallbackMsg = `Erro ${response.status}: Ocorreu uma falha no servidor.`
+      if (response.status === 401) fallbackMsg = 'Sessão expirada ou não autenticada.'
+      else if (response.status === 403) fallbackMsg = 'Sem permissões para realizar esta ação.'
+      else if (response.status === 404) fallbackMsg = 'Recurso não encontrado.'
+      else if (response.status === 409) fallbackMsg = 'Conflito de dados ou registo já existente.'
+
+      throw new Error(error?.detail ?? error?.message ?? fallbackMsg)
     }
 
     if (response.status === 204) return undefined as T
-    return response.json() as Promise<T>
+    return response.json().catch(() => ({} as T)) as Promise<T>
   }
 
   get<T>(path: string, params?: Record<string, string | number | boolean | undefined>) {
