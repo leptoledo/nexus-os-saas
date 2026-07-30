@@ -141,6 +141,9 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 
 ## 7. Registro de Alterações (Changelog Automático)
 
+### [2026-07-30] — Correção de Deploy Vercel (Monorepo)
+* **Vercel Build Fix:** Configurado `vercel.json` na raiz apontando o comando de build (`cd frontend && npm install && npm run build`) e o diretório de saída (`frontend/.next`), resolvendo falhas de build de diretório em monorepo (Erro `dpl_D11Sif41eZUyS3K6ScGiaGiiNfLT`).
+
 ### [2026-07-30] — Passo 4: Setup & Execução Local
 * **Setup & Docker:** Validação e alinhamento do ambiente local de desenvolvimento (`docker-compose.yml`, `.env.example`, `Makefile`).
 * **Conclusão:** Finalização do ciclo completo de desenvolvimento em 4 passos (Expansão de Módulos, Refatoração/Bugs, Testes e Setup).
