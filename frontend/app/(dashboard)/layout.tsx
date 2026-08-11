@@ -42,27 +42,16 @@ import { CommandPalette } from '@/components/shared/CommandPalette'
 import { FirstRunModal } from '@/components/shared/FirstRunModal'
 import { cn, getInitials } from '@/lib/utils'
 
-const GERAL_NAV_ITEMS = [
+const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/marketing', label: 'Calendário', icon: Calendar },
-  { href: '/analytics', label: 'Relatórios', icon: BarChart3 },
-  { href: '/marketing', label: 'Trades', icon: TrendingUp },
-  { href: '/projects', label: 'Diário', icon: BookOpen },
-  { href: '/analytics', label: 'Notebook', icon: FileText },
-  { href: '/whatsapp', label: 'Comunidade', icon: Users },
-  { href: '/ai', label: 'Escrever no Blog', icon: PenTool },
-  { href: '/billing', label: 'Contas', icon: CreditCard },
-  { href: '/notifications', label: 'Gestão de Risco', icon: ShieldAlert },
-  { href: '/settings', label: 'Importar', icon: Upload },
+  { href: '/marketing', label: 'Marketing & CRM', icon: TrendingUp },
+  { href: '/projects', label: 'Gestão de Projetos', icon: Layers },
+  { href: '/analytics', label: 'Analytics & BI', icon: BarChart3 },
+  { href: '/whatsapp', label: 'WhatsApp Bot', icon: MessageSquare },
+  { href: '/ai', label: 'NexusAI', icon: Bot },
+  { href: '/billing', label: 'Assinatura', icon: CreditCard },
+  { href: '/notifications', label: 'Notificações', icon: Bell },
   { href: '/settings', label: 'Configurações', icon: Settings },
-]
-
-const ADMIN_NAV_ITEMS = [
-  { href: '/dashboard', label: 'Painel Geral', icon: LayoutDashboard },
-  { href: '/marketing', label: 'Landing Page', icon: Globe },
-  { href: '/settings', label: 'Gestão de Usuários', icon: UserCheck },
-  { href: '/ai', label: 'Blog Admin', icon: FileCode },
-  { href: '/notifications', label: 'Aprovar Depoimentos', icon: MessageSquare },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -75,6 +64,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [commandOpen, setCommandOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const queryClient = useQueryClient()
+
+  // Map route path to human-readable page name
+  const pageTitles: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/marketing': 'Marketing & CRM',
+    '/projects': 'Gestão de Projetos',
+    '/analytics': 'Analytics & BI',
+    '/whatsapp': 'WhatsApp Bot',
+    '/ai': 'NexusAI',
+    '/billing': 'Assinatura & Planos',
+    '/notifications': 'Notificações',
+    '/settings': 'Configurações',
+    '/feedback': 'Feedback & Suporte',
+  }
+  const currentPageTitle = pageTitles[pathname] ?? 'Dashboard'
 
   // ⌘K shortcut
   useEffect(() => {
@@ -132,74 +136,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Navigation items */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 no-scrollbar space-y-4">
-          {/* Section GERAL */}
-          <div>
-            {(isHovered || mobileOpen) && (
-              <p className="px-4 pb-1.5 text-[10px] font-extrabold tracking-wider text-purple-400 uppercase">
-                Geral
-              </p>
-            )}
-            <ul className="space-y-0.5 px-2">
-              {GERAL_NAV_ITEMS.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
-                return (
-                  <li key={item.label + item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      title={!isHovered ? item.label : undefined}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-2.5 py-2 text-xs transition-all duration-200',
-                        !isHovered && !mobileOpen ? 'justify-center' : '',
-                        isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                          : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-200 border border-transparent'
-                      )}
-                    >
-                      <Icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-emerald-400' : 'text-slate-400')} />
-                      {(isHovered || mobileOpen) && <span className="truncate">{item.label}</span>}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-
-          {/* Section ADMINISTRAÇÃO */}
-          <div>
-            {(isHovered || mobileOpen) && (
-              <p className="px-4 pb-1.5 text-[10px] font-extrabold tracking-wider text-purple-400 uppercase">
-                Administração
-              </p>
-            )}
-            <ul className="space-y-0.5 px-2">
-              {ADMIN_NAV_ITEMS.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href && item.label === 'Gestão de Usuários'
-                return (
-                  <li key={item.label}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      title={!isHovered ? item.label : undefined}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-2.5 py-2 text-xs transition-all duration-200',
-                        !isHovered && !mobileOpen ? 'justify-center' : '',
-                        isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 font-semibold shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                          : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-200 border border-transparent'
-                      )}
-                    >
-                      <Icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-emerald-400' : 'text-slate-400')} />
-                      {(isHovered || mobileOpen) && <span className="truncate">{item.label}</span>}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 no-scrollbar">
+          <ul className="space-y-0.5 px-2">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    title={!isHovered ? item.label : undefined}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
+                      !isHovered && !mobileOpen ? 'justify-center' : '',
+                      isActive
+                        ? 'bg-[#0e2a24] text-[#00e699] border border-[#00e699]/30 font-semibold'
+                        : 'text-slate-300 hover:bg-slate-900/80 hover:text-white border border-transparent'
+                    )}
+                  >
+                    <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-[#00e699]' : 'text-slate-400')} />
+                    {(isHovered || mobileOpen) && <span className="truncate">{item.label}</span>}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
         </nav>
 
         {/* User Footer */}
@@ -245,22 +207,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="h-5 w-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                 <Zap className="h-3 w-3" />
               </div>
-              <span className="text-slate-400 font-medium">/ Trader Journal</span>
-              <span className="bg-amber-950/80 text-amber-300 border border-amber-500/50 text-[10px] font-extrabold px-1.5 py-0.5 rounded tracking-wide">
-                OURO
+              <span className="text-slate-400 font-medium">/ NexusOS</span>
+              <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 text-[10px] font-extrabold px-1.5 py-0.5 rounded tracking-wide">
+                PRO
               </span>
               <span className="text-slate-500">/</span>
-              <span className="text-white font-semibold capitalize">
-                {pathname.replace('/', '') || 'Dashboard'}
+              <span className="text-white font-semibold">
+                {currentPageTitle}
               </span>
             </div>
           </div>
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3">
-            <a href="#" className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors">
+            <Link href="/feedback" className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors">
               Feedback
-            </a>
+            </Link>
 
             {/* Search Input Pill */}
             <button
@@ -288,7 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
 
             {/* User Avatar Circle */}
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white border border-indigo-400/30">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold shadow-[0_0_8px_rgba(16,185,129,0.2)]">
               {getInitials(user?.name || user?.email || 'L')}
             </div>
           </div>

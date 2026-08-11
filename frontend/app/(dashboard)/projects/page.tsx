@@ -21,9 +21,22 @@ import {
 import { KanbanBoard } from '@/components/projects/KanbanBoard'
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal'
 import { CreateTaskModal } from '@/components/projects/CreateTaskModal'
+import { Button } from '@/components/ui/button'
 import { cn, formatDate, getInitials } from '@/lib/utils'
 
-// ... remaining imports stay intact ...
+import {
+  useProjects,
+  useCreateProject,
+  useDeleteProject,
+  useUpdateProject,
+  useProjectBoard,
+  useBoardTasks,
+  useMoveTask,
+  useCreateTask,
+  useDeleteTask,
+} from '@/hooks/useProjects'
+import type { Project, Task } from '@/types'
+
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -111,81 +124,87 @@ export default function ProjectsPage() {
   )
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Projetos</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    <div className="mx-auto max-w-7xl space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Projetos</h1>
+          <p className="mt-1 text-xs text-slate-400">
             {loadingProjects ? (
-              <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> A carregar...</span>
+              <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin text-emerald-400" /> A carregar...</span>
             ) : (
               `${activeProjectsCount} projetos ativos · ${pendingTasksCount} tarefas pendentes`
             )}
           </p>
         </div>
 
-        {/* Time tracker widget */}
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 dark:border-gray-700 dark:bg-gray-900">
-          <Timer className="h-4 w-4 text-gray-400" />
-          <span className="font-mono text-lg font-bold tabular-nums text-gray-900 dark:text-white">
-            {formatTimer(timerSeconds)}
-          </span>
-          <button
-            onClick={toggleTimer}
-            className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-              timerRunning ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
-            )}
-          >
-            {timerRunning ? <Square className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          </button>
-          <button onClick={resetTimer} className="text-xs text-gray-400 hover:text-gray-600">
-            Reset
-          </button>
-        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Time tracker widget */}
+          <div className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-[#090d16] px-3.5 py-2 text-xs font-mono text-white shadow-inner">
+            <Timer className="h-4 w-4 text-slate-400" />
+            <span className="font-mono text-sm font-bold tracking-wider text-white">
+              {formatTimer(timerSeconds)}
+            </span>
+            <button
+              onClick={toggleTimer}
+              className={cn(
+                'flex h-6 w-6 items-center justify-center rounded-lg font-bold transition-colors',
+                timerRunning ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-[#00e699] text-slate-950 hover:bg-[#05df8a]'
+              )}
+            >
+              {timerRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current" />}
+            </button>
+            <button onClick={resetTimer} className="text-xs text-slate-400 hover:text-slate-200 transition-colors">
+              Reset
+            </button>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowNewTask(true)}
-            disabled={!selectedProject || !boardData?.boardId}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-600/30 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-50"
+          <Button
+            onClick={() => {
+              if (projects.length === 0) {
+                setShowNewProject(true);
+              } else {
+                setShowNewTask(true);
+              }
+            }}
+            className="bg-[#090d16] hover:bg-slate-800/80 border border-slate-800 text-white font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             Nova Tarefa
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setShowNewProject(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+            className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold text-xs rounded-xl px-4 py-2 shadow-lg shadow-emerald-500/20 transition-colors disabled:opacity-60"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 mr-1 stroke-[2.5]" />
             Novo Projeto
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Project cards */}
+      {/* Main Content Area */}
       {loadingProjects ? (
-        <div className="mb-6 flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="mb-6 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center dark:border-gray-700 dark:bg-gray-900/50">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-950">
-            <Kanban className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+        /* Empty State Card matching screenshot 100% */
+        <div className="border border-dashed border-slate-800/80 bg-[#0f1422] rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-2xl min-h-[420px]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-indigo-400 mb-4 shadow-inner">
+            <Kanban className="h-7 w-7 text-indigo-400" />
           </div>
-          <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">Ainda não tem projetos</h3>
-          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+          <h3 className="text-lg font-bold text-white mb-1.5">Ainda não tem projetos</h3>
+          <p className="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
             Crie o primeiro projeto e comece a organizar as tarefas da sua equipa.
           </p>
-          <button
+          <Button
             onClick={() => setShowNewProject(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md"
+            className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold text-xs rounded-xl px-6 py-2.5 shadow-lg shadow-emerald-500/20 transition-colors flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             Criar primeiro projeto
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

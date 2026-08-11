@@ -323,21 +323,21 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-4">
           {/* AI Insights card */}
-          <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 p-6 dark:border-indigo-900 dark:from-indigo-950/40 dark:to-violet-950/40">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
-                <Sparkles className="h-4 w-4 text-white" />
+          <div className="bg-[#0f1422] border border-slate-800/80 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
+                <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Resumo IA</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Esta semana</p>
+                <h3 className="text-lg font-bold text-white">Resumo IA</h3>
+                <p className="text-xs text-slate-400">Esta semana</p>
               </div>
             </div>
-            <ul className="space-y-3">
+            <ul className="space-y-3.5 pt-1">
               {insightTexts.map((text, i) => (
-                <li key={i} className="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <Lightbulb className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-indigo-500" />
-                  {text}
+                <li key={i} className="flex items-start gap-3 text-sm font-medium text-slate-200 leading-relaxed">
+                  <Lightbulb className="mt-1 h-4 w-4 flex-shrink-0 text-indigo-400" />
+                  <span>{text}</span>
                 </li>
               ))}
             </ul>

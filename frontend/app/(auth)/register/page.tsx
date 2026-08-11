@@ -113,23 +113,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#090d16] text-slate-100 font-sans">
       {/* ── Left: Brand panel ─────────────────────────────────────────────── */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-gray-950 p-12 lg:flex lg:w-[45%]">
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-[#070a11] border-r border-slate-800/60 p-12 lg:flex lg:w-[45%]">
         {/* Background gradients */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-violet-600/20 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-indigo-600/15 blur-3xl" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
+          <div className="absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
         </div>
 
         {/* Logo */}
         <div className="relative">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600">
-              <Zap className="h-4 w-4 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <Zap className="h-4 w-4 fill-emerald-400" />
             </div>
-            <span className="text-xl font-bold text-white">NexusOS</span>
+            <span className="text-xl font-bold tracking-tight text-white">NexusOS</span>
           </Link>
         </div>
 
@@ -137,23 +137,23 @@ export default function RegisterPage() {
           <div>
             <h2 className="mb-3 text-4xl font-extrabold leading-tight text-white">
               Tudo o que precisa,<br />
-              <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">
                 numa só plataforma
               </span>
             </h2>
-            <p className="text-base text-gray-400">
+            <p className="text-base text-slate-400">
               14 dias grátis. Sem cartão de crédito. Configure em menos de 10 minutos.
             </p>
           </div>
 
           {/* Module grid */}
           <div className="grid grid-cols-2 gap-3">
-            {MODULES.map(({ icon: Icon, label, color, bg }) => (
-              <div key={label} className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/5 p-3.5">
-                <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${bg}`}>
-                  <Icon className={`h-4 w-4 ${color}`} />
+            {MODULES.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#0f1422] p-3.5 shadow-sm">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                  <Icon className="h-4 w-4 text-emerald-400" />
                 </div>
-                <span className="text-sm font-medium text-gray-200">{label}</span>
+                <span className="text-sm font-medium text-slate-200">{label}</span>
               </div>
             ))}
           </div>
@@ -161,37 +161,37 @@ export default function RegisterPage() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-4">
             {STATS.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border border-white/8 bg-white/5 p-3.5 text-center">
-                <Icon className="h-4 w-4 text-indigo-400" />
+              <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-800/80 bg-[#0f1422] p-3.5 text-center shadow-sm">
+                <Icon className="h-4 w-4 text-emerald-400" />
                 <span className="text-xl font-extrabold text-white">{value}</span>
-                <span className="text-xs text-gray-400">{label}</span>
+                <span className="text-xs text-slate-400">{label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Bottom tagline */}
-        <p className="relative text-xs text-gray-500">
+        <p className="relative text-xs text-slate-500">
           Dados armazenados em servidores europeus · RGPD compliant · TLS 1.3
         </p>
       </div>
 
       {/* ── Right: Form panel ─────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 dark:bg-gray-950 sm:px-8 lg:px-12">
+      <div className="flex flex-1 flex-col items-center justify-center bg-[#090d16] px-6 py-10 sm:px-8 lg:px-12">
         <div className="w-full max-w-[420px]">
           {/* Mobile logo */}
           <div className="mb-7 flex items-center justify-center gap-2 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600">
-              <Zap className="h-4 w-4 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+              <Zap className="h-4 w-4 fill-emerald-400" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">NexusOS</span>
+            <span className="text-xl font-bold text-white">NexusOS</span>
           </div>
 
           <div className="mb-7">
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">Criar conta gratuita</h1>
-            <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <h1 className="text-2xl font-extrabold text-white">Criar conta gratuita</h1>
+            <p className="mt-1.5 text-sm text-slate-400">
               Já tem conta?{' '}
-              <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+              <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300">
                 Entrar
               </Link>
             </p>
@@ -201,72 +201,72 @@ export default function RegisterPage() {
           <button
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading}
-            className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-800 bg-[#0f1422] px-4 py-3 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-slate-800/80 disabled:opacity-60"
           >
-            {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : <GoogleIcon />}
             Registar com Google
           </button>
 
           <div className="relative mb-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+              <div className="w-full border-t border-slate-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 dark:bg-gray-950">ou com email</span>
+              <span className="bg-[#090d16] px-3 text-slate-500">ou com email</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Nome completo</label>
+                <label className="mb-1.5 block text-xs font-medium text-slate-300">Nome completo</label>
                 <input
                   {...register('name')}
                   type="text"
                   autoComplete="name"
                   placeholder="João Silva"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                  className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
-                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+                {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Nome da empresa</label>
+                <label className="mb-1.5 block text-xs font-medium text-slate-300">Nome da empresa</label>
                 <input
                   {...register('organization_name')}
                   type="text"
                   placeholder="Acme Lda."
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                  className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
-                {errors.organization_name && <p className="mt-1 text-xs text-red-500">{errors.organization_name.message}</p>}
+                {errors.organization_name && <p className="mt-1 text-xs text-red-400">{errors.organization_name.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Email profissional</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-300">Email profissional</label>
               <input
                 {...register('email')}
                 type="email"
                 autoComplete="email"
                 placeholder="nome@empresa.pt"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
-              {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+              {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Password</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-300">Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   placeholder="Mínimo 8 caracteres"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                  className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-3.5 py-2.5 pr-10 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -278,15 +278,15 @@ export default function RegisterPage() {
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-colors ${
-                          level <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200 dark:bg-gray-700'
+                          level <= passwordStrength.score ? passwordStrength.color : 'bg-slate-800'
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">{passwordStrength.label}</p>
+                  <p className="mt-1 text-xs text-slate-400">{passwordStrength.label}</p>
                 </div>
               )}
-              {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+              {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
             </div>
 
             <div className="flex items-start gap-2.5">
@@ -294,28 +294,28 @@ export default function RegisterPage() {
                 {...register('accept_terms')}
                 type="checkbox"
                 id="accept_terms"
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-[#0f1422] text-emerald-400 focus:ring-emerald-500"
               />
-              <label htmlFor="accept_terms" className="text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+              <label htmlFor="accept_terms" className="text-xs leading-relaxed text-slate-400">
                 Aceito os{' '}
-                <Link href="/terms" className="font-medium text-indigo-600 hover:underline">Termos de Serviço</Link>
+                <Link href="/terms" className="font-medium text-emerald-400 hover:underline">Termos de Serviço</Link>
                 {' '}e a{' '}
-                <Link href="/privacy" className="font-medium text-indigo-600 hover:underline">Política de Privacidade</Link>
+                <Link href="/privacy" className="font-medium text-emerald-400 hover:underline">Política de Privacidade</Link>
               </label>
             </div>
-            {errors.accept_terms && <p className="text-xs text-red-500">{errors.accept_terms.message}</p>}
+            {errors.accept_terms && <p className="text-xs text-red-400">{errors.accept_terms.message}</p>}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-sm shadow-indigo-600/25 transition-all hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00e699] hover:bg-[#05df8a] px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-60"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Criar conta gratuita
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-gray-400">
+          <p className="mt-5 text-center text-xs text-slate-500">
             14 dias grátis · Sem cartão de crédito · Cancele quando quiser
           </p>
         </div>

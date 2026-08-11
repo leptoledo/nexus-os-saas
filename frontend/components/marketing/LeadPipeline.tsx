@@ -61,30 +61,30 @@ function LeadCard({ lead, isDragging, onAction }: LeadCardProps) {
   return (
     <div
       className={cn(
-        'rounded-lg border bg-white p-3 shadow-sm transition-all dark:bg-gray-800',
+        'rounded-lg border bg-[#0f1422] p-3 shadow-sm transition-all text-slate-100',
         isDragging
-          ? 'rotate-1 border-indigo-300 shadow-lg dark:border-indigo-700'
-          : 'border-gray-200 hover:shadow-md dark:border-gray-700'
+          ? 'rotate-1 border-emerald-400 shadow-lg shadow-emerald-500/10'
+          : 'border-slate-800/80 hover:border-slate-700 hover:shadow-md'
       )}
     >
       <div className="mb-2 flex items-start justify-between">
-        <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{lead.name}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-white truncate">{lead.name}</p>
           {lead.company && (
-            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-500">
-              <Building2 className="h-3 w-3" />
-              {lead.company}
+            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-400 truncate">
+              <Building2 className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{lead.company}</span>
             </div>
           )}
         </div>
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold ml-1">
           {getInitials(lead.name)}
         </div>
       </div>
 
       <div className="mb-2 flex items-center gap-1.5">
-        <Euro className="h-3 w-3 text-emerald-600" />
-        <span className="text-sm font-bold text-emerald-600">
+        <Euro className="h-3 w-3 text-emerald-400" />
+        <span className="text-xs font-bold text-emerald-400">
           {formatCurrency(lead.estimated_value, lead.currency)}
         </span>
       </div>
@@ -95,7 +95,7 @@ function LeadCard({ lead, isDragging, onAction }: LeadCardProps) {
         </span>
 
         {lead.next_action_date && (
-          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+          <div className="flex items-center gap-1 text-[10px] text-slate-400">
             <Calendar className="h-3 w-3" />
             {formatDate(lead.next_action_date, 'dd/MM')}
           </div>
@@ -106,7 +106,7 @@ function LeadCard({ lead, isDragging, onAction }: LeadCardProps) {
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); onAction?.(lead) }}
-          className="mt-2 flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-[11px] text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40 transition-colors"
+          className="mt-2 flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-[11px] text-emerald-400 hover:bg-emerald-500/10 transition-colors"
         >
           <Calendar className="h-3 w-3 flex-shrink-0" />
           <span className="truncate">{lead.next_action}</span>
@@ -209,7 +209,7 @@ export function LeadPipeline({ leads: externalLeads, onLeadMove, onLeadAction, o
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 w-full">
         {COLUMNS.map((column) => {
           const columnLeads = getLeadsByStatus(column.id)
           const totalValue = getTotalValue(column.id)
@@ -218,37 +218,37 @@ export function LeadPipeline({ leads: externalLeads, onLeadMove, onLeadAction, o
             <div
               key={column.id}
               data-column-id={column.id}
-              className="flex w-72 flex-shrink-0 flex-col rounded-xl border border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50"
+              className="flex w-full min-w-0 flex-col rounded-xl border border-slate-800/80 bg-[#070a11] shadow-sm"
             >
               {/* Column header */}
-              <div className="px-4 py-3">
+              <div className="p-2.5">
                 <div className="mb-1 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={cn('h-2 w-2 rounded-full', column.dotColor)} />
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className={cn('h-2 w-2 flex-shrink-0 rounded-full', column.dotColor)} />
+                    <span className="text-xs font-bold text-white truncate">
                       {column.label}
                     </span>
-                    <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                    <span className="rounded-full bg-slate-800 px-1.5 py-0.2 text-[10px] font-medium text-slate-300 flex-shrink-0">
                       {columnLeads.length}
                     </span>
                   </div>
                   <button
                     onClick={onAddLead}
                     title="Adicionar lead"
-                    className="rounded-md p-1 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
                 {totalValue > 0 && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-[11px] text-slate-400">
                     {formatCurrency(totalValue, 'EUR')} potencial
                   </p>
                 )}
               </div>
 
               {/* Leads */}
-              <div className="flex-1 space-y-2.5 overflow-y-auto px-3 pb-3">
+              <div className="flex-1 space-y-2 overflow-y-auto px-2 pb-2.5">
                 <SortableContext
                   items={columnLeads.map((l) => l.id)}
                   strategy={verticalListSortingStrategy}
@@ -259,7 +259,7 @@ export function LeadPipeline({ leads: externalLeads, onLeadMove, onLeadAction, o
                 </SortableContext>
 
                 {columnLeads.length === 0 && (
-                  <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 text-xs text-gray-400 dark:border-gray-700">
+                  <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-slate-800 text-[11px] text-slate-500">
                     Arraste leads aqui
                   </div>
                 )}

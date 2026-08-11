@@ -116,23 +116,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#090d16] text-slate-100 font-sans">
       {/* ── Left: Brand panel ─────────────────────────────────────────────── */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-gray-950 p-12 lg:flex lg:w-[55%]">
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-[#070a11] border-r border-slate-800/60 p-12 lg:flex lg:w-[55%]">
         {/* Background gradients */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-violet-600/15 blur-3xl" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
+          <div className="absolute -left-20 -top-20 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
         </div>
 
         <div className="relative">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600">
-              <Zap className="h-4.5 w-4.5 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <Zap className="h-4.5 w-4.5 fill-emerald-400" />
             </div>
-            <span className="text-xl font-bold text-white">NexusOS</span>
+            <span className="text-xl font-bold tracking-tight text-white">NexusOS</span>
           </Link>
         </div>
 
@@ -141,11 +141,11 @@ export default function LoginPage() {
           <div>
             <h2 className="mb-3 text-4xl font-extrabold leading-tight text-white">
               A plataforma que a sua<br />
-              <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">
                 empresa estava à espera
               </span>
             </h2>
-            <p className="text-lg text-gray-400">
+            <p className="text-lg text-slate-400">
               Gerencie marketing, projetos, analytics e WhatsApp Bot — tudo num só lugar.
             </p>
           </div>
@@ -153,9 +153,9 @@ export default function LoginPage() {
           {/* Feature list */}
           <ul className="space-y-3.5">
             {FEATURES.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm text-gray-300">
-                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-600/30 ring-1 ring-indigo-500/40">
-                  <Icon className="h-3.5 w-3.5 text-indigo-400" />
+              <li key={text} className="flex items-center gap-3 text-sm text-slate-300">
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                  <Icon className="h-3.5 w-3.5 text-emerald-400" />
                 </div>
                 {text}
               </li>
@@ -163,22 +163,22 @@ export default function LoginPage() {
           </ul>
 
           {/* Testimonial */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+          <div className="rounded-2xl border border-slate-800/80 bg-[#0f1422] p-5 shadow-lg">
             <div className="mb-3 flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
               ))}
             </div>
-            <p className="mb-4 text-sm leading-relaxed text-gray-300">
+            <p className="mb-4 text-sm leading-relaxed text-slate-300">
               "O NexusOS revolucionou a forma como gerimos os nossos clientes. Triplicamos as conversões em apenas 3 meses."
             </p>
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold text-emerald-300">
                 AR
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">Ana Rodrigues</p>
-                <p className="text-xs text-gray-400">CEO · TechFlow Lda</p>
+                <p className="text-xs text-slate-400">CEO · TechFlow Lda</p>
               </div>
             </div>
           </div>
@@ -190,37 +190,37 @@ export default function LoginPage() {
             {AVATARS.map((a, i) => (
               <div
                 key={a}
-                className={`flex h-8 w-8 items-center justify-center rounded-full ${AVATAR_COLORS[i]} text-xs font-bold text-white ring-2 ring-gray-950`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${AVATAR_COLORS[i]} text-xs font-bold text-white ring-2 ring-[#070a11]`}
               >
                 {a}
               </div>
             ))}
           </div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-400">
             <span className="font-semibold text-white">2.400+</span> empresas confiam no NexusOS
           </p>
         </div>
       </div>
 
       {/* ── Right: Form panel ─────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12 dark:bg-gray-950 sm:px-8 lg:px-12">
+      <div className="flex flex-1 flex-col items-center justify-center bg-[#090d16] px-6 py-12 sm:px-8 lg:px-12">
         <div className="w-full max-w-[400px]">
           {/* Mobile logo */}
           <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600">
-              <Zap className="h-4 w-4 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+              <Zap className="h-4 w-4 fill-emerald-400" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">NexusOS</span>
+            <span className="text-xl font-bold text-white">NexusOS</span>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-extrabold text-white">
               {mfaRequired ? 'Verificação MFA' : 'Entrar na sua conta'}
             </h1>
             {!mfaRequired && (
-              <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1.5 text-sm text-slate-400">
                 Não tem conta?{' '}
-                <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                <Link href="/register" className="font-semibold text-emerald-400 hover:text-emerald-300">
                   Registe-se gratuitamente
                 </Link>
               </p>
@@ -233,38 +233,38 @@ export default function LoginPage() {
               <button
                 onClick={handleGoogleLogin}
                 disabled={isGoogleLoading}
-                className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="mb-5 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-800 bg-[#0f1422] px-4 py-3 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-slate-800/80 disabled:opacity-60"
               >
-                {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : <GoogleIcon />}
                 Continuar com Google
               </button>
 
               <div className="relative mb-5">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+                  <div className="w-full border-t border-slate-800" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-3 text-gray-400 dark:bg-gray-950">ou com email</span>
+                  <span className="bg-[#090d16] px-3 text-slate-500">ou com email</span>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-300">Email</label>
                   <input
                     {...register('email')}
                     type="email"
                     autoComplete="email"
                     placeholder="nome@empresa.pt"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                    className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
-                  {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email.message}</p>}
+                  {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
                 </div>
 
                 <div>
                   <div className="mb-1.5 flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                    <Link href="/forgot-password" className="text-xs font-medium text-indigo-600 hover:text-indigo-500">
+                    <label className="text-sm font-medium text-slate-300">Password</label>
+                    <Link href="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
                       Esqueceu a password?
                     </Link>
                   </div>
@@ -274,23 +274,23 @@ export default function LoginPage() {
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       placeholder="••••••••"
-                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                      className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-4 py-2.5 pr-10 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password.message}</p>}
+                  {errors.password && <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>}
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-sm shadow-indigo-600/25 transition-all hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00e699] hover:bg-[#05df8a] px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-60"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   Entrar
@@ -300,27 +300,27 @@ export default function LoginPage() {
           ) : (
             /* MFA Step */
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div className="flex items-start gap-3 rounded-xl bg-indigo-50 p-4 dark:bg-indigo-950/40">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
-                <p className="text-sm text-indigo-800 dark:text-indigo-200">
+              <div className="flex items-start gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                <p className="text-sm text-emerald-300">
                   Introduza o código de 6 dígitos da sua aplicação autenticadora.
                 </p>
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Código MFA</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-300">Código MFA</label>
                 <input
                   {...register('mfa_code')}
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
                   placeholder="000000"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  className="w-full rounded-xl border border-slate-800 bg-[#0f1422] px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00e699] hover:bg-[#05df8a] px-4 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-60"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Verificar
@@ -328,18 +328,18 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setMfaRequired(false); setMfaFactorId(null) }}
-                className="w-full text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                className="w-full text-sm text-slate-400 hover:text-white"
               >
                 ← Voltar ao login
               </button>
             </form>
           )}
 
-          <p className="mt-8 text-center text-xs text-gray-400">
+          <p className="mt-8 text-center text-xs text-slate-500">
             Ao continuar, aceita os nossos{' '}
-            <Link href="/terms" className="text-indigo-600 hover:underline">Termos</Link>
+            <Link href="/terms" className="text-emerald-400 hover:underline">Termos</Link>
             {' '}e a{' '}
-            <Link href="/privacy" className="text-indigo-600 hover:underline">Privacidade</Link>
+            <Link href="/privacy" className="text-emerald-400 hover:underline">Privacidade</Link>
           </p>
         </div>
       </div>
