@@ -153,21 +153,66 @@ export function useUpdateFlow() {
       queryClient.invalidateQueries({ queryKey: ['whatsapp', 'flows'] })
     },
   })
+}// --------------- Local Storage Persistence Helpers ---------------
+
+function getLocalConversations(): any[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('nexus_conversations_cache')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalConversations(list: any[]) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem('nexus_conversations_cache', JSON.stringify(list))
+  } catch {}
+}
+
+function getLocalMessages(convId: string): any[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(`nexus_msgs_${convId}`)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalMessages(convId: string, msgs: any[]) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(`nexus_msgs_${convId}`, JSON.stringify(msgs))
+  } catch {}
 }
 
 export function useWhatsAppConversations(status?: string) {
   return useQuery({
     queryKey: ['whatsapp', 'conversations', status],
     queryFn: async () => {
+      let apiList: any[] = []
       try {
         const res = await whatsappApi.getConversations(status ? { status } : undefined)
-        return (res.data ?? []).map(adaptConversation)
+        apiList = (res.data ?? []).map(adaptConversation)
       } catch (err) {
-        return DEFAULT_CONVERSATIONS
+        apiList = []
       }
+      const localList = getLocalConversations()
+      const mergedMap = new Map<string, any>()
+      for (const item of [...localList, ...apiList]) {
+        const key = item.contact_phone?.replace(/\s+/g, '') || item.id
+        if (!mergedMap.has(key)) {
+          mergedMap.set(key, item)
+        }
+      }
+      const merged = Array.from(mergedMap.values())
+      return status ? merged.filter((c) => c.status === status) : merged
     },
-    staleTime: 10_000,
-    refetchInterval: 15_000,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   })
 }
 
@@ -176,16 +221,23 @@ export function useConversationMessages(conversationId: string | undefined) {
     queryKey: ['whatsapp', 'conversations', conversationId, 'messages'],
     queryFn: async () => {
       if (!conversationId) return []
+      let apiMsgs: any[] = []
       try {
         const res = await whatsappApi.getMessages(conversationId)
-        return (res.data ?? []).map(adaptMessage)
+        apiMsgs = (res.data ?? []).map(adaptMessage)
       } catch (err) {
-        return (DEFAULT_MESSAGES[conversationId] ?? []).map(adaptMessage)
+        apiMsgs = []
       }
+      const localMsgs = getLocalMessages(conversationId)
+      const mergedMap = new Map<string, any>()
+      for (const m of [...localMsgs, ...apiMsgs, ...(DEFAULT_MESSAGES[conversationId] ?? [])]) {
+        mergedMap.set(m.id, m)
+      }
+      return Array.from(mergedMap.values())
     },
     enabled: !!conversationId,
-    staleTime: 5_000,
-    refetchInterval: 10_000,
+    staleTime: 3_000,
+    refetchInterval: 5_000,
   })
 }
 
@@ -203,28 +255,25 @@ export function useSendReply() {
       const newMsg = {
         id: `msg-${Date.now()}`,
         direction: 'outbound' as const,
-        content,
+        content: content.trim(),
         sent_at: new Date().toISOString(),
         sender_name: 'NexusOS Agent',
       }
 
-      // Add to messages cache
-      queryClient.setQueryData(['whatsapp', 'conversations', conversationId, 'messages'], (old: any[] = []) => {
-        return [...old, newMsg]
-      })
+      const existingMsgs = getLocalMessages(conversationId)
+      const updatedMsgs = [...existingMsgs, newMsg]
+      saveLocalMessages(conversationId, updatedMsgs)
 
-      // Also append to DEFAULT_MESSAGES for persistent memory
-      if (!DEFAULT_MESSAGES[conversationId]) DEFAULT_MESSAGES[conversationId] = []
-      DEFAULT_MESSAGES[conversationId].push(newMsg)
+      queryClient.setQueryData(['whatsapp', 'conversations', conversationId, 'messages'], updatedMsgs)
 
-      // Update conversation last message in list
-      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => {
-        return old.map((c) =>
-          c.id === conversationId
-            ? { ...c, last_message: content, last_message_at: newMsg.sent_at, unread_count: 0 }
-            : c
-        )
-      })
+      const localConvs = getLocalConversations()
+      const updatedConvs = localConvs.map((c) =>
+        c.id === conversationId
+          ? { ...c, last_message: content.trim(), last_message_at: new Date().toISOString() }
+          : c
+      )
+      saveLocalConversations(updatedConvs)
+      queryClient.setQueryData(['whatsapp', 'conversations', undefined], updatedConvs)
     },
   })
 }
@@ -240,10 +289,12 @@ export function useResolveConversation() {
       }
     },
     onSuccess: (_, conversationId) => {
-      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => {
-        return old.map((c) => (c.id === conversationId ? { ...c, status: 'resolved' as const } : c))
-      })
-      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'conversations'] })
+      const localConvs = getLocalConversations()
+      const updatedConvs = localConvs.map((c) =>
+        c.id === conversationId ? { ...c, status: 'resolved' as const } : c
+      )
+      saveLocalConversations(updatedConvs)
+      queryClient.setQueryData(['whatsapp', 'conversations', undefined], updatedConvs)
     },
   })
 }
@@ -259,12 +310,14 @@ export function useAssignConversation() {
       }
     },
     onSuccess: (_, { conversationId, agentId }) => {
-      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => {
-        return old.map((c) =>
-          c.id === conversationId ? { ...c, assigned_to: agentId, status: 'waiting_agent' as const } : c
-        )
-      })
-      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'conversations'] })
+      const localConvs = getLocalConversations()
+      const updatedConvs = localConvs.map((c) =>
+        c.id === conversationId
+          ? { ...c, assigned_to: agentId, status: 'waiting_agent' as const }
+          : c
+      )
+      saveLocalConversations(updatedConvs)
+      queryClient.setQueryData(['whatsapp', 'conversations', undefined], updatedConvs)
     },
   })
 }
@@ -323,16 +376,12 @@ export function useSendProactiveMessage() {
         sender_name: 'NexusOS Agent',
       }
 
-      if (!DEFAULT_MESSAGES[convId]) {
-        DEFAULT_MESSAGES[convId] = []
-      }
-      DEFAULT_MESSAGES[convId].push(newMsg)
+      // Save messages
+      const existingMsgs = getLocalMessages(convId)
+      const updatedMsgs = [...existingMsgs, newMsg]
+      saveLocalMessages(convId, updatedMsgs)
 
-      // Set messages cache for this conversation
-      queryClient.setQueryData(['whatsapp', 'conversations', convId, 'messages'], (old: any[] = []) => [
-        ...old,
-        newMsg,
-      ])
+      queryClient.setQueryData(['whatsapp', 'conversations', convId, 'messages'], updatedMsgs)
 
       // Add to conversation list
       const newConv = {
@@ -346,21 +395,26 @@ export function useSendProactiveMessage() {
         assigned_to: 'NexusOS Agent',
       }
 
-      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => {
-        const existingIdx = old.findIndex((c) => c.contact_phone.replace(/\s+/g, '') === to.replace(/\s+/g, ''))
-        if (existingIdx >= 0) {
-          const updated = [...old]
-          updated[existingIdx] = {
-            ...updated[existingIdx],
-            last_message: message.trim(),
-            last_message_at: nowIso,
-          }
-          return updated
-        }
-        return [newConv, ...old]
-      })
+      const localConvs = getLocalConversations()
+      const existingIdx = localConvs.findIndex(
+        (c) => c.contact_phone.replace(/\s+/g, '') === to.replace(/\s+/g, '')
+      )
 
-      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'conversations'] })
+      let updatedConvs: any[] = []
+      if (existingIdx >= 0) {
+        updatedConvs = [...localConvs]
+        updatedConvs[existingIdx] = {
+          ...updatedConvs[existingIdx],
+          last_message: message.trim(),
+          last_message_at: nowIso,
+        }
+      } else {
+        updatedConvs = [newConv, ...localConvs]
+      }
+
+      saveLocalConversations(updatedConvs)
+      queryClient.setQueryData(['whatsapp', 'conversations', undefined], updatedConvs)
+      queryClient.setQueryData(['whatsapp', 'conversations', 'active'], updatedConvs)
     },
   })
 }

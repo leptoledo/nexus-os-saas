@@ -57,10 +57,11 @@ export function ProactiveMsgModal({ open, onClose, onSelectConversation }: Proac
       })
 
       const contactName = form.name.trim() || form.phone.trim()
-      toast.success(`Mensagem proativa enviada com sucesso para ${contactName}!`)
+      toast.success(`Mensagem criada e enviada para ${contactName}!`)
 
-      if (res?.conversation_id && onSelectConversation) {
-        onSelectConversation(res.conversation_id)
+      const convId = res?.conversation_id ?? `pro-${Date.now()}`
+      if (onSelectConversation) {
+        onSelectConversation(convId)
       }
 
       handleClose()
