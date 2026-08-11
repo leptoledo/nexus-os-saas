@@ -147,7 +147,9 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 * **Simulador WhatsApp Conectado ao Vivo (`WhatsAppSimulatorModal.tsx`):** O simulador interativo GPT-4o sincroniza agora em tempo real as conversas simuladas diretamente com a lista de atendimento do WhatsApp Bot.
 * **Modais Interativos de Ação (`CreateFlowModal`, `ProactiveMsgModal`, `AssignAgentModal`, `EditFlowModal`):**
   - *Novo Fluxo:* Suporte a palavras-chave gatilho e criação rápida de fluxos de triagem.
-* **Melhorias de UX no Separador de Configuração (`/whatsapp/page.tsx`):**
+* **Remoção de Conteúdo de Demonstração (`useWhatsApp.ts` & `/whatsapp/page.tsx`):**
+  - Removidos todos os dados fictícios de teste (*João Silva*, *Maria Santos*, *Pedro Oliveira*, métricas falsas).
+  - Interface limpa e pronta para produção receber apenas clientes, conversas, fluxos e métricas reais em tempo real.
   - Corrigido o botão de atalho **"Configurar Provedor Real"** para alternar de forma segura o separador ativo para a aba de Configuração.
   - Adicionado botão com ícone de olho (`Eye` / `EyeOff`) no campo **Auth Token / Token de Acesso** para visualizar e ocultar a chave com um clique.
   - Integração com a chamada real ao endpoint de backend `/whatsapp/send` e tratamento gracioso em dev/staging.

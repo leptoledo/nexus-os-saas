@@ -3,162 +3,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { whatsappApi } from '@/lib/api'
 
-// --------------- Realistic Demo / Fallback Data ---------------
+// --------------- Fallback Data (Empty for Real Production Use) ---------------
 
-export const DEFAULT_FLOWS = [
-  {
-    id: 'f2000000-0000-0000-0000-000000000001',
-    name: 'Qualificação Automática de Leads',
-    description: 'Fluxo principal de atendimento e triagem inicial de novos contactos comercial',
-    is_active: true,
-    trigger_keywords: ['preço', 'plano', 'orçamento', 'demo', 'informação'],
-    nodes_count: 5,
-    conversions: 34,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'f2000000-0000-0000-0000-000000000002',
-    name: 'Suporte Técnico 24/7',
-    description: 'Atendimento automático fora de horas para dúvidas frequentes e FAQ de clientes',
-    is_active: false,
-    trigger_keywords: ['ajuda', 'suporte', 'erro', 'problema', 'ticket'],
-    nodes_count: 3,
-    conversions: 12,
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-  {
-    id: 'f2000000-0000-0000-0000-000000000003',
-    name: 'Boas-Vindas Comercial & Agendamento',
-    description: 'Saudação de entrada com link direto para agendamento de chamadas com consultor',
-    is_active: true,
-    trigger_keywords: ['olá', 'oi', 'boa tarde', 'bom dia', 'agendar'],
-    nodes_count: 4,
-    conversions: 19,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-]
+export const DEFAULT_FLOWS: any[] = []
 
-export const DEFAULT_CONTACTS = [
-  { id: 'c-leandro', name: 'Leandro Toledo', phone_number: '+351 912 329 104', email: 'leandro.toledo@nexusdemo.pt', tags: ['VIP', 'Cliente Principal'] },
-  { id: 'c2000000-0000-0000-0000-000000000001', name: 'João Silva', phone_number: '+351 919 876 543', email: 'joao.silva@empresa.pt', tags: ['VIP', 'Lead'] },
-  { id: 'c2000000-0000-0000-0000-000000000002', name: 'Maria Santos', phone_number: '+351 931 122 334', email: 'maria.santos@tech.pt', tags: ['Cliente Pro'] },
-  { id: 'c2000000-0000-0000-0000-000000000003', name: 'Pedro Oliveira', phone_number: '+351 964 455 667', email: 'pedro@inovacao.com', tags: ['Novo Lead'] },
-]
+export const DEFAULT_CONTACTS: any[] = []
 
-export const DEFAULT_CONVERSATIONS = [
-  {
-    id: 'v-leandro-001',
-    contact_name: 'Leandro Toledo',
-    contact_phone: '+351 912 329 104',
-    last_message: 'Olá gostaria de agendar uma reunião para tratarmos da implementação do sistema? Obrigado.',
-    last_message_at: new Date(Date.now() - 2 * 60000).toISOString(),
-    status: 'active' as const,
-    unread_count: 0,
-    assigned_to: 'NexusOS Agent',
-  },
-  {
-    id: 'v1000000-0000-0000-0000-000000000001',
-    contact_name: 'João Silva',
-    contact_phone: '+351 919 876 543',
-    last_message: 'Excelente! Qual o valor mensal e como agendo uma demo?',
-    last_message_at: new Date(Date.now() - 10 * 60000).toISOString(),
-    status: 'active' as const,
-    unread_count: 1,
-    assigned_to: 'Bruno Costa',
-  },
-  {
-    id: 'v1000000-0000-0000-0000-000000000002',
-    contact_name: 'Maria Santos',
-    contact_phone: '+351 931 122 334',
-    last_message: '🤖 Olá Maria! Estou a transferir o seu atendimento para um gestor de conta humano.',
-    last_message_at: new Date(Date.now() - 120 * 60000).toISOString(),
-    status: 'waiting_agent' as const,
-    unread_count: 0,
-    assigned_to: null,
-  },
-  {
-    id: 'v1000000-0000-0000-0000-000000000003',
-    contact_name: 'Pedro Oliveira',
-    contact_phone: '+351 964 455 667',
-    last_message: '📄 Olá Pedro! As faturas estão disponíveis no menu Definições > Assinatura & Faturação.',
-    last_message_at: new Date(Date.now() - 1440 * 60000).toISOString(),
-    status: 'resolved' as const,
-    unread_count: 0,
-    assigned_to: 'Ana Silva',
-  },
-]
+export const DEFAULT_CONVERSATIONS: any[] = []
 
-export const DEFAULT_MESSAGES: Record<string, any[]> = {
-  'v1000000-0000-0000-0000-000000000001': [
-    {
-      id: 'm1',
-      direction: 'inbound',
-      content: 'Olá! Gostaria de saber mais sobre o plano Pro da agência.',
-      sent_at: new Date(Date.now() - 120 * 60000).toISOString(),
-      sender_name: 'João Silva',
-    },
-    {
-      id: 'm2',
-      direction: 'outbound',
-      content: '👋 Olá João! O plano Pro inclui automação de WhatsApp, CRM ilimitado e relatórios de IA.',
-      sent_at: new Date(Date.now() - 115 * 60000).toISOString(),
-      sender_name: 'NexusOS Bot',
-    },
-    {
-      id: 'm3',
-      direction: 'inbound',
-      content: 'Excelente! Qual o valor mensal e como agendo uma demo?',
-      sent_at: new Date(Date.now() - 10 * 60000).toISOString(),
-      sender_name: 'João Silva',
-    },
-  ],
-  'v1000000-0000-0000-0000-000000000002': [
-    {
-      id: 'm4',
-      direction: 'inbound',
-      content: 'Preciso de ajuda urgente para integrar as campanhas de Meta Ads.',
-      sent_at: new Date(Date.now() - 240 * 60000).toISOString(),
-      sender_name: 'Maria Santos',
-    },
-    {
-      id: 'm5',
-      direction: 'outbound',
-      content: '🤖 Olá Maria! Estou a transferir o seu atendimento para um gestor de conta humano.',
-      sent_at: new Date(Date.now() - 230 * 60000).toISOString(),
-      sender_name: 'NexusOS Bot',
-    },
-  ],
-  'v1000000-0000-0000-0000-000000000003': [
-    {
-      id: 'm6',
-      direction: 'inbound',
-      content: 'Onde posso descarregar a fatura deste mês?',
-      sent_at: new Date(Date.now() - 1440 * 60000).toISOString(),
-      sender_name: 'Pedro Oliveira',
-    },
-    {
-      id: 'm7',
-      direction: 'outbound',
-      content: '📄 Olá Pedro! As faturas estão disponíveis no menu Definições > Assinatura & Faturação.',
-      sent_at: new Date(Date.now() - 1380 * 60000).toISOString(),
-      sender_name: 'Ana Silva',
-    },
-  ],
-}
+export const DEFAULT_MESSAGES: Record<string, any[]> = {}
 
 export const DEFAULT_METRICS = {
-  conversations_today: 47,
-  response_rate: 98,
-  avg_resolution_minutes: 4,
-  bot_conversions: 34,
-  conversations_by_day: [
-    { day: 'Seg', count: 32 },
-    { day: 'Ter', count: 28 },
-    { day: 'Qua', count: 41 },
-    { day: 'Qui', count: 35 },
-    { day: 'Sex', count: 47 },
-  ],
-  resolved_by_bot_pct: 82,
+  conversations_today: 0,
+  response_rate: 0,
+  avg_resolution_minutes: 0,
+  bot_conversions: 0,
+  conversations_by_day: [],
+  resolved_by_bot_pct: 0,
 }
 
 // --------------- Adaptadores DB → Frontend ---------------
@@ -219,8 +80,7 @@ export function useWhatsAppFlows() {
     queryFn: async () => {
       try {
         const res = await whatsappApi.getFlows()
-        const data = (res.data ?? []).map(adaptFlow)
-        return data.length > 0 ? data : DEFAULT_FLOWS
+        return (res.data ?? []).map(adaptFlow)
       } catch (err) {
         return DEFAULT_FLOWS
       }
@@ -301,17 +161,13 @@ export function useWhatsAppConversations(status?: string) {
     queryFn: async () => {
       try {
         const res = await whatsappApi.getConversations(status ? { status } : undefined)
-        const list = (res.data ?? []).map(adaptConversation)
-        if (list.length > 0) return list
+        return (res.data ?? []).map(adaptConversation)
       } catch (err) {
-        // Fallback below
+        return DEFAULT_CONVERSATIONS
       }
-      return status
-        ? DEFAULT_CONVERSATIONS.filter((c) => c.status === status)
-        : DEFAULT_CONVERSATIONS
     },
-    staleTime: 15_000,
-    refetchInterval: 30_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   })
 }
 
@@ -322,16 +178,14 @@ export function useConversationMessages(conversationId: string | undefined) {
       if (!conversationId) return []
       try {
         const res = await whatsappApi.getMessages(conversationId)
-        const list = (res.data ?? []).map(adaptMessage)
-        if (list.length > 0) return list
+        return (res.data ?? []).map(adaptMessage)
       } catch (err) {
-        // Fallback below
+        return (DEFAULT_MESSAGES[conversationId] ?? []).map(adaptMessage)
       }
-      return (DEFAULT_MESSAGES[conversationId] ?? []).map(adaptMessage)
     },
     enabled: !!conversationId,
-    staleTime: 10_000,
-    refetchInterval: 15_000,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   })
 }
 
@@ -436,14 +290,10 @@ export function useWhatsAppContacts(q?: string) {
     queryFn: async () => {
       try {
         const res = await whatsappApi.getContacts(q ? { q } : undefined)
-        const list = res.data ?? []
-        if (list.length > 0) return list
+        return res.data ?? []
       } catch (err) {
-        // Fallback below
+        return DEFAULT_CONTACTS
       }
-      return q
-        ? DEFAULT_CONTACTS.filter((c) => c.name.toLowerCase().includes(q.toLowerCase()) || c.phone_number.includes(q))
-        : DEFAULT_CONTACTS
     },
     staleTime: 30_000,
   })

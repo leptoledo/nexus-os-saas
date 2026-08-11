@@ -62,7 +62,7 @@ export default function WhatsAppPage() {
   const [showSimulator, setShowSimulator] = useState(false);
   const [configProvider, setConfigProvider] = useState<'twilio' | 'meta'>('meta');
   const [configSaved, setConfigSaved] = useState(false);
-  const [configNumber, setConfigNumber] = useState("+351 912 345 678");
+  const [configNumber, setConfigNumber] = useState("");
   const [configSid, setConfigSid] = useState("");
   const [configToken, setConfigToken] = useState("");
   const [testingConn, setTestingConn] = useState(false);
@@ -177,31 +177,31 @@ export default function WhatsAppPage() {
   const kpiData: { title: string; value: number; change: number; icon: LucideIcon; sparklineData: { value: number }[] }[] = [
     {
       title: "Conversas Hoje",
-      value: metrics?.conversations_today ?? 47,
-      change: 12,
+      value: metrics?.conversations_today ?? conversations.length,
+      change: conversations.length > 0 ? 100 : 0,
       icon: MessageSquare,
-      sparklineData: [32, 28, 41, 35, 47, 39, metrics?.conversations_today ?? 47].map((v) => ({ value: v })),
+      sparklineData: [0, 0, 0, 0, 0, 0, metrics?.conversations_today ?? conversations.length].map((v) => ({ value: v })),
     },
     {
       title: "Taxa de Resposta (%)",
-      value: metrics?.response_rate ?? 98,
-      change: 1,
+      value: metrics?.response_rate ?? (conversations.length > 0 ? 100 : 0),
+      change: 0,
       icon: Activity,
-      sparklineData: [95, 96, 97, 97, 98, 98, metrics?.response_rate ?? 98].map((v) => ({ value: v })),
+      sparklineData: [0, 0, 0, 0, 0, 0, metrics?.response_rate ?? (conversations.length > 0 ? 100 : 0)].map((v) => ({ value: v })),
     },
     {
       title: "Tempo Médio (min)",
-      value: metrics?.avg_resolution_minutes ?? 4,
-      change: -18,
+      value: metrics?.avg_resolution_minutes ?? 0,
+      change: 0,
       icon: Timer,
-      sparklineData: [8, 7, 6, 6, 5, 4, metrics?.avg_resolution_minutes ?? 4].map((v) => ({ value: v })),
+      sparklineData: [0, 0, 0, 0, 0, 0, metrics?.avg_resolution_minutes ?? 0].map((v) => ({ value: v })),
     },
     {
       title: "Conversões Bot",
-      value: metrics?.bot_conversions ?? 34,
-      change: 28,
+      value: metrics?.bot_conversions ?? 0,
+      change: 0,
       icon: Zap,
-      sparklineData: [20, 22, 25, 28, 30, 32, metrics?.bot_conversions ?? 34].map((v) => ({ value: v })),
+      sparklineData: [0, 0, 0, 0, 0, 0, metrics?.bot_conversions ?? 0].map((v) => ({ value: v })),
     },
   ];
 
@@ -571,19 +571,19 @@ export default function WhatsAppPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="bg-[#0f1422] border-slate-800 text-white">
               <CardContent className="p-6 text-center">
-                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.response_rate ?? 98}%</p>
+                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.response_rate ?? 0}%</p>
                 <p className="text-xs text-slate-400 mt-1">Taxa de Resposta</p>
               </CardContent>
             </Card>
             <Card className="bg-[#0f1422] border-slate-800 text-white">
               <CardContent className="p-6 text-center">
-                <p className="text-3xl font-extrabold text-white">{metrics?.avg_resolution_minutes ?? 4}m</p>
+                <p className="text-3xl font-extrabold text-white">{metrics?.avg_resolution_minutes ?? 0}m</p>
                 <p className="text-xs text-slate-400 mt-1">Tempo Médio Resolução</p>
               </CardContent>
             </Card>
             <Card className="bg-[#0f1422] border-slate-800 text-white">
               <CardContent className="p-6 text-center">
-                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.resolved_by_bot_pct ?? 82}%</p>
+                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.resolved_by_bot_pct ?? 0}%</p>
                 <p className="text-xs text-slate-400 mt-1">Resolvido pelo Bot (Sem Humano)</p>
               </CardContent>
             </Card>
@@ -592,14 +592,28 @@ export default function WhatsAppPage() {
           <Card className="bg-[#0f1422] border-slate-800 text-white">
             <CardHeader><CardTitle className="text-base font-bold text-white">Volume de Conversas por Dia (últimos 7 dias)</CardTitle></CardHeader>
             <CardContent>
-              <div className="flex items-end gap-3 h-36 pt-4">
-                {[32, 45, 28, 61, 47, 53, 47].map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                    <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{val}</span>
-                    <div className="w-full bg-[#00e699]/30 border border-[#00e699]/50 rounded-t transition-all group-hover:bg-[#00e699]" style={{ height: `${(val / 61) * 100}%` }} />
-                  </div>
-                ))}
-              </div>
+              {metrics?.conversations_by_day && metrics.conversations_by_day.length > 0 ? (
+                <div className="flex items-end gap-3 h-36 pt-4">
+                  {metrics.conversations_by_day.slice(-7).map((d: any, i: number) => {
+                    const max = Math.max(...metrics.conversations_by_day.map((x: any) => x.count), 1);
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                        <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{d.count}</span>
+                        <div className="w-full bg-[#00e699]/30 border border-[#00e699]/50 rounded-t transition-all group-hover:bg-[#00e699]" style={{ height: `${Math.max((d.count / max) * 100, 4)}%` }} />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex items-end gap-3 h-36 pt-4">
+                  {[0, 0, 0, 0, 0, 0, conversations.length].map((val, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                      <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{val}</span>
+                      <div className="w-full bg-slate-800/40 border border-slate-700/50 rounded-t transition-all" style={{ height: val > 0 ? '40%' : '4px' }} />
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex justify-between text-xs text-slate-400 mt-3 border-t border-slate-800 pt-2">
                 {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
                   <span key={i} className="font-semibold">{day}</span>
