@@ -142,6 +142,7 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 ## 7. Registro de Alterações (Changelog Automático)
 
 ### [2026-08-11] — Validação de Build & Preparação para Deploy na Vercel
+* **Ajuste de Configuração da Vercel (`vercel.json`):** Removido o comando redundante `cd frontend` das configurações de build para compatibilidade com o Root Directory `frontend` configurado no painel da Vercel.
 * **Criação do Componente UI Textarea (`textarea.tsx`):** Adicionado o componente `Textarea` em `frontend/components/ui/textarea.tsx` para suporte nativo ao formulário de `/feedback`.
 * **Validação de Compilação Frontend:** Executada verificação de build com Next.js (`npm run build`), garantindo que 100% das 16 páginas estáticas/dinâmicas compilam com zero erros antes do envio ao GitHub e Vercel.
 * **Atualização Geral da Documentação:** Documentação sincronizada em `docs/DOCUMENTACAO_GERAL.md` conforme diretrizes do projeto.
