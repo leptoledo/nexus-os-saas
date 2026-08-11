@@ -65,6 +65,24 @@ const GANTT_TASKS = [
   { id: '4', name: 'Testes & Validação', start: 9, duration: 5, color: 'bg-purple-500' },
 ]
 
+const TASK_STATUS_CLASSES: Record<TaskStatus, string> = {
+  backlog: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+  todo: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  in_progress: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  in_review: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  done: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  cancelled: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+}
+
+const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  backlog: 'Backlog',
+  todo: 'A Fazer',
+  in_progress: 'Em Progresso',
+  in_review: 'Em Revisão',
+  done: 'Concluído',
+  cancelled: 'Cancelado',
+}
+
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
