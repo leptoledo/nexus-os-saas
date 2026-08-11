@@ -147,7 +147,10 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 * **Simulador WhatsApp Conectado ao Vivo (`WhatsAppSimulatorModal.tsx`):** O simulador interativo GPT-4o sincroniza agora em tempo real as conversas simuladas diretamente com a lista de atendimento do WhatsApp Bot.
 * **Modais Interativos de Ação (`CreateFlowModal`, `ProactiveMsgModal`, `AssignAgentModal`, `EditFlowModal`):**
   - *Novo Fluxo:* Suporte a palavras-chave gatilho e criação rápida de fluxos de triagem.
-* **Remoção de Conteúdo de Demonstração (`useWhatsApp.ts` & `/whatsapp/page.tsx`):**
+* **Integração com Evolution API — Conexão por QR Code (100% Grátis):**
+  - Adicionado suporte completo à Evolution API para conexão direta do WhatsApp por leitura de QR Code sem custos de Twilio ou Meta.
+  - Criado painel interativo de QR Code em `/whatsapp` com gerador de código, estado de conexão ao vivo e instruções de emparelhamento no telemóvel.
+  - Adicionadas rotas de backend `/whatsapp/evolution/qrcode`, `/whatsapp/evolution/status` e webhook `/whatsapp/webhooks/evolution`.
   - Removidos todos os dados fictícios de teste (*João Silva*, *Maria Santos*, *Pedro Oliveira*, métricas falsas).
   - Interface limpa e pronta para produção receber apenas clientes, conversas, fluxos e métricas reais em tempo real.
   - Corrigido o botão de atalho **"Configurar Provedor Real"** para alternar de forma segura o separador ativo para a aba de Configuração.

@@ -432,6 +432,9 @@ export const whatsappApi = {
   saveConfig: (data: any) => apiClient.put<any>('/whatsapp/config', data),
   testConfig: () => apiClient.post<any>('/whatsapp/config/test'),
 
+  getEvolutionQrCode: (instanceName?: string) => apiClient.get<any>('/whatsapp/evolution/qrcode', { instance: instanceName }),
+  getEvolutionStatus: (instanceName?: string) => apiClient.get<any>('/whatsapp/evolution/status', { instance: instanceName }),
+
   getMetrics: () => apiClient.get<any>('/whatsapp/metrics'),
 }
 

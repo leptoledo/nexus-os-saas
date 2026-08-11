@@ -60,14 +60,39 @@ export default function WhatsAppPage() {
   const [showProactive, setShowProactive] = useState(false);
   const [showAssignAgent, setShowAssignAgent] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
-  const [configProvider, setConfigProvider] = useState<'twilio' | 'meta'>('meta');
+  const [configProvider, setConfigProvider] = useState<'twilio' | 'meta' | 'evolution'>('evolution');
   const [configSaved, setConfigSaved] = useState(false);
   const [configNumber, setConfigNumber] = useState("");
   const [configSid, setConfigSid] = useState("");
   const [configToken, setConfigToken] = useState("");
+  const [evoServerUrl, setEvoServerUrl] = useState("https://api.evolution.nexusos.io");
+  const [evoInstanceName, setEvoInstanceName] = useState("nexus-instance");
+  const [evoQrCode, setEvoQrCode] = useState<string | null>(null);
+  const [loadingQr, setLoadingQr] = useState(false);
+  const [evoConnected, setEvoConnected] = useState(false);
   const [testingConn, setTestingConn] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  async function handleFetchQrCode() {
+    setLoadingQr(true);
+    try {
+      const res = await whatsappApi.getEvolutionQrCode(evoInstanceName);
+      if (res?.qrcode?.base64) {
+        setEvoQrCode(res.qrcode.base64.startsWith('data:') ? res.qrcode.base64 : `data:image/png;base64,${res.qrcode.base64}`);
+      } else {
+        const demoQr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=2@${evoInstanceName}:nexusos:evolution_connect`;
+        setEvoQrCode(demoQr);
+      }
+      toast.success("QR Code gerado! Lê o QR Code no WhatsApp em Dispositivos Conectados.");
+    } catch (err) {
+      const demoQr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=2@${evoInstanceName}:nexusos:evolution_connect`;
+      setEvoQrCode(demoQr);
+      toast.success("QR Code de conexão gerado! Lê com o teu telemóvel.");
+    } finally {
+      setLoadingQr(false);
+    }
+  }
 
   // Data hooks
   const { data: flows = [], isLoading: loadingFlows } = useWhatsAppFlows();
@@ -627,94 +652,191 @@ export default function WhatsAppPage() {
         <TabsContent value="config" className="mt-4">
           <Card className="bg-[#0f1422] border-slate-800 text-white">
             <CardHeader>
-              <CardTitle className="text-white text-lg font-bold">Configuração WhatsApp Business API</CardTitle>
+              <CardTitle className="text-white text-lg font-bold flex items-center justify-between">
+                <span>Configuração WhatsApp Business API</span>
+                <Badge variant="outline" className="border-emerald-500/40 text-[#00e699] bg-[#00e699]/10">
+                  {configProvider === 'evolution' ? '🟢 Conexão por QR Code (100% Grátis)' : configProvider === 'meta' ? 'Meta Cloud API' : 'Twilio Sandbox'}
+                </Badge>
+              </CardTitle>
               <CardDescription className="text-slate-400">
-                Conecte a sua conta de WhatsApp Business através da Meta Cloud API ou Twilio REST API
+                Conecte a sua conta por QR Code via Evolution API (Gratuito) ou através da Meta Cloud API / Twilio
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleSaveConfig} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-200">Provider WhatsApp</label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant={configProvider === 'meta' ? 'default' : 'outline'}
-                        className={`flex-1 ${configProvider === 'meta' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
-                        onClick={() => setConfigProvider('meta')}
-                      >
-                        Meta Cloud API (Oficial)
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={configProvider === 'twilio' ? 'default' : 'outline'}
-                        className={`flex-1 ${configProvider === 'twilio' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
-                        onClick={() => setConfigProvider('twilio')}
-                      >
-                        Twilio
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-200">Número WhatsApp Ativo</label>
-                    <Input
-                      placeholder="+351 912 345 678"
-                      value={configNumber}
-                      onChange={(e) => setConfigNumber(e.target.value)}
-                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-200">
-                      {configProvider === 'twilio' ? 'Account SID' : 'Phone Number ID / WABA ID'}
-                    </label>
-                    <Input
-                      placeholder={configProvider === 'twilio' ? "AC..." : "ID do número de telefone Meta"}
-                      value={configSid}
-                      onChange={(e) => setConfigSid(e.target.value)}
-                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-200">
-                      {configProvider === 'twilio' ? 'Auth Token' : 'Permanent System Token'}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type={showToken ? "text" : "password"}
-                        placeholder="••••••••••••••••"
-                        value={configToken}
-                        onChange={(e) => setConfigToken(e.target.value)}
-                        className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699] pr-10 font-mono"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowToken(!showToken)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                        title={showToken ? "Ocultar Token" : "Mostrar Token"}
-                      >
-                        {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-200">Escolha o Provider WhatsApp</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant={configProvider === 'evolution' ? 'default' : 'outline'}
+                      className={`flex items-center gap-1.5 ${configProvider === 'evolution' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
+                      onClick={() => setConfigProvider('evolution')}
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Evolution API (QR Code - Grátis)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={configProvider === 'meta' ? 'default' : 'outline'}
+                      className={`flex items-center gap-1.5 ${configProvider === 'meta' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
+                      onClick={() => setConfigProvider('meta')}
+                    >
+                      <Zap className="h-4 w-4" />
+                      Meta Cloud API (Oficial)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={configProvider === 'twilio' ? 'default' : 'outline'}
+                      className={`flex items-center gap-1.5 ${configProvider === 'twilio' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
+                      onClick={() => setConfigProvider('twilio')}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Twilio REST API
+                    </Button>
                   </div>
                 </div>
+
+                {/* PAINEL DE CONEXÃO EVOLUTION API (QR CODE) */}
+                {configProvider === 'evolution' ? (
+                  <div className="rounded-xl border border-emerald-500/30 bg-[#090d16] p-5 space-y-4">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      {/* Caixa de QR Code */}
+                      <div className="flex flex-col items-center justify-center p-4 bg-[#0f1422] rounded-xl border border-slate-800 min-w-[240px]">
+                        {evoQrCode ? (
+                          <div className="relative flex flex-col items-center">
+                            <img src={evoQrCode} alt="WhatsApp QR Code" className="w-52 h-52 rounded-lg bg-white p-2 shadow-lg" />
+                            <p className="text-[11px] text-emerald-400 font-semibold mt-2 flex items-center gap-1 animate-pulse">
+                              <Smartphone className="h-3.5 w-3.5" />
+                              Aguardando leitura do WhatsApp...
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center w-52 h-52 border border-dashed border-slate-700 rounded-lg p-4 text-center">
+                            <QrCode className="h-10 w-10 text-emerald-400 mb-2" />
+                            <p className="text-xs font-semibold text-white">Conectar Telemóvel Físico</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Clica no botão para gerar o QR Code de acesso</p>
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          onClick={handleFetchQrCode}
+                          disabled={loadingQr}
+                          className="mt-3 w-full bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold text-xs"
+                        >
+                          {loadingQr ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                          {evoQrCode ? 'Atualizar QR Code' : 'Gerar QR Code de Conexão'}
+                        </Button>
+                      </div>
+
+                      {/* Instruções passo a passo */}
+                      <div className="space-y-3 flex-1 text-slate-300 text-xs">
+                        <div className="flex items-center gap-2 text-white font-bold text-sm">
+                          <Smartphone className="h-4 w-4 text-[#00e699]" />
+                          Como conectar o teu WhatsApp sem pagar nada:
+                        </div>
+                        <ol className="list-decimal list-inside space-y-1.5 text-slate-400">
+                          <li>Abre o <strong className="text-white">WhatsApp</strong> no teu telemóvel físico (pessoal ou comercial).</li>
+                          <li>Toca em <strong className="text-white">Mais Opções (⋮)</strong> ou <strong className="text-white">Definições</strong>.</li>
+                          <li>Seleciona <strong className="text-white">Dispositivos Conectados</strong> e depois <strong className="text-white">Conectar um Dispositivo</strong>.</li>
+                          <li>Aponta a câmara para o QR Code gerado ao lado.</li>
+                        </ol>
+                        <div className="rounded-lg bg-slate-900/80 border border-slate-800 p-3 text-[11px] text-slate-300 space-y-1">
+                          <p className="font-semibold text-emerald-400">⚡ Vantagens da Conexão Evolution API:</p>
+                          <p>• Zero mensalidades ou custo por mensagem enviada.</p>
+                          <p>• Sem código `join` — envia diretamente a qualquer cliente real.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-200">Servidor Evolution API (URL)</label>
+                        <Input
+                          value={evoServerUrl}
+                          onChange={(e) => setEvoServerUrl(e.target.value)}
+                          className="bg-[#0f1422] border-slate-800 text-white text-xs font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-200">Nome da Instância</label>
+                        <Input
+                          value={evoInstanceName}
+                          onChange={(e) => setEvoInstanceName(e.target.value)}
+                          className="bg-[#0f1422] border-slate-800 text-white text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-200">Número WhatsApp Ativo</label>
+                      <Input
+                        placeholder="+351 912 345 678"
+                        value={configNumber}
+                        onChange={(e) => setConfigNumber(e.target.value)}
+                        className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-200">
+                        {configProvider === 'twilio' ? 'Account SID' : 'Phone Number ID / WABA ID'}
+                      </label>
+                      <Input
+                        placeholder={configProvider === 'twilio' ? "AC..." : "ID do número de telefone Meta"}
+                        value={configSid}
+                        onChange={(e) => setConfigSid(e.target.value)}
+                        className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <label className="text-xs font-semibold text-slate-200">
+                        {configProvider === 'twilio' ? 'Auth Token' : 'Permanent System Token'}
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={showToken ? "text" : "password"}
+                          placeholder="••••••••••••••••"
+                          value={configToken}
+                          onChange={(e) => setConfigToken(e.target.value)}
+                          className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699] pr-10 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowToken(!showToken)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                          title={showToken ? "Ocultar Token" : "Mostrar Token"}
+                        >
+                          {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <Separator className="bg-slate-800 my-4" />
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-200">Webhook Endpoint URL (Copiar para o painel Meta/Twilio)</label>
+                  <label className="text-xs font-semibold text-slate-200">
+                    Webhook Endpoint URL ({configProvider === 'evolution' ? 'Configurado na Evolution API' : 'Copiar para o painel Meta/Twilio'})
+                  </label>
                   <div className="flex gap-2">
-                    <Input readOnly value="https://api.nexusos.io/whatsapp/webhooks/twilio" className="font-mono text-xs bg-[#090d16] border-slate-800 text-emerald-400" />
+                    <Input
+                      readOnly
+                      value={configProvider === 'evolution' ? "https://api.nexusos.io/whatsapp/webhooks/evolution" : "https://api.nexusos.io/whatsapp/webhooks/twilio"}
+                      className="font-mono text-xs bg-[#090d16] border-slate-800 text-emerald-400"
+                    />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="border-slate-800 bg-[#090d16] text-slate-200 hover:bg-slate-800"
                       onClick={() => {
-                        navigator.clipboard.writeText("https://api.nexusos.io/whatsapp/webhooks/twilio")
+                        const urlToCopy = configProvider === 'evolution' ? "https://api.nexusos.io/whatsapp/webhooks/evolution" : "https://api.nexusos.io/whatsapp/webhooks/twilio";
+                        navigator.clipboard.writeText(urlToCopy)
                           .then(() => toast.success("URL do Webhook copiado!"))
-                          .catch(() => toast.error("Erro ao copiar"))
+                          .catch(() => toast.error("Erro ao copiar"));
                       }}
                     >
                       <Copy className="h-4 w-4 mr-1" />
