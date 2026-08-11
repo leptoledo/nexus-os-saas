@@ -14,7 +14,8 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import {
   MessageSquare, Plus, Play, Pause, Send, User, Bot, CheckCheck,
   BarChart2, Workflow, Inbox, Settings, PhoneCall, Activity, Timer,
-  Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone, AlertTriangle
+  Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone, AlertTriangle,
+  Eye, EyeOff
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -48,6 +49,8 @@ function formatTime(dateStr: string): string {
 }
 
 export default function WhatsAppPage() {
+  const [activeTab, setActiveTab] = useState<string>("conversations");
+  const [showToken, setShowToken] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [convSearch, setConvSearch] = useState("");
@@ -195,10 +198,7 @@ export default function WhatsAppPage() {
         <Button
           size="sm"
           variant="outline"
-          onClick={() => {
-            const configTab = document.querySelector('[data-value="config"]') as HTMLElement;
-            configTab?.click();
-          }}
+          onClick={() => setActiveTab("config")}
           className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 shrink-0 text-xs font-semibold bg-[#090d16]"
         >
           <Settings className="h-3.5 w-3.5 mr-1.5" />
@@ -213,7 +213,7 @@ export default function WhatsAppPage() {
         ))}
       </div>
 
-      <Tabs defaultValue="conversations" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-[#0f1422] border border-slate-800/80 p-1">
           <TabsTrigger value="conversations" className="data-[state=active]:bg-[#00e699] data-[state=active]:text-slate-950 font-semibold">
             <Inbox className="h-4 w-4 mr-1.5" />
@@ -615,13 +615,23 @@ export default function WhatsAppPage() {
                     <label className="text-xs font-semibold text-slate-200">
                       {configProvider === 'twilio' ? 'Auth Token' : 'Permanent System Token'}
                     </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••••••••••"
-                      value={configToken}
-                      onChange={(e) => setConfigToken(e.target.value)}
-                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showToken ? "text" : "password"}
+                        placeholder="••••••••••••••••"
+                        value={configToken}
+                        onChange={(e) => setConfigToken(e.target.value)}
+                        className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699] pr-10 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowToken(!showToken)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                        title={showToken ? "Ocultar Token" : "Mostrar Token"}
+                      >
+                        {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
