@@ -15,7 +15,7 @@ import {
   MessageSquare, Plus, Play, Pause, Send, User, Bot, CheckCheck,
   BarChart2, Workflow, Inbox, Settings, PhoneCall, Activity, Timer,
   Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone, AlertTriangle,
-  Eye, EyeOff
+  Eye, EyeOff, QrCode, Smartphone, CheckCircle2, RefreshCw
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { whatsappApi } from "@/lib/api";
