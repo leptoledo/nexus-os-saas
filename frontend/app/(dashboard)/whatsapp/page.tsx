@@ -63,8 +63,8 @@ export default function WhatsAppPage() {
   const [configProvider, setConfigProvider] = useState<'twilio' | 'meta'>('meta');
   const [configSaved, setConfigSaved] = useState(false);
   const [configNumber, setConfigNumber] = useState("+351 912 345 678");
-  const [configSid, setConfigSid] = useState("AC99887766554433221100");
-  const [configToken, setConfigToken] = useState("secret_token_nexus_12345");
+  const [configSid, setConfigSid] = useState("");
+  const [configToken, setConfigToken] = useState("");
   const [testingConn, setTestingConn] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -83,6 +83,33 @@ export default function WhatsAppPage() {
   );
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId) ?? filteredConvs[0] ?? null;
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const savedLocal = typeof window !== 'undefined' ? localStorage.getItem("nexus_whatsapp_config") : null;
+        if (savedLocal) {
+          const parsed = JSON.parse(savedLocal);
+          if (parsed.provider) setConfigProvider(parsed.provider);
+          if (parsed.phone_number) setConfigNumber(parsed.phone_number);
+          if (parsed.account_sid) setConfigSid(parsed.account_sid);
+          if (parsed.auth_token) setConfigToken(parsed.auth_token);
+          return;
+        }
+
+        const res = await whatsappApi.getConfig();
+        if (res) {
+          if (res.provider) setConfigProvider(res.provider);
+          if (res.phone_number) setConfigNumber(res.phone_number);
+          if (res.account_sid) setConfigSid(res.account_sid);
+          if (res.auth_token_encrypted) setConfigToken(res.auth_token_encrypted);
+        }
+      } catch (err) {
+        // Graceful fallback
+      }
+    }
+    loadConfig();
+  }, []);
 
   useEffect(() => {
     if (selectedConv && !selectedConvId) {
@@ -124,14 +151,20 @@ export default function WhatsAppPage() {
       return;
     }
 
+    const payload = {
+      provider: configProvider,
+      phone_number: configNumber.trim(),
+      account_sid: configSid.trim(),
+      auth_token: configToken.trim(),
+      webhook_url: "https://api.nexusos.io/whatsapp/webhooks/twilio",
+    };
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("nexus_whatsapp_config", JSON.stringify(payload));
+    }
+
     try {
-      await whatsappApi.saveConfig({
-        provider: configProvider,
-        phone_number: configNumber.trim(),
-        account_sid: configSid.trim(),
-        auth_token: configToken.trim(),
-        webhook_url: "https://api.nexusos.io/whatsapp/webhooks/twilio",
-      });
+      await whatsappApi.saveConfig(payload);
     } catch (err) {
       // Graceful fallback
     }
