@@ -22,7 +22,7 @@ import {
   useOrganization, useUpdateOrganization,
   useMembers, useInviteMember, useUpdateMemberRole, useRemoveMember,
 } from "@/hooks/useSettings";
-import { authApi, notificationsApi } from "@/lib/api";
+import { apiClient, authApi, notificationsApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
 import { MFAModal } from "@/components/settings/MFAModal";
 import { toast } from "sonner";
