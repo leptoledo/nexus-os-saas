@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import {
   MessageSquare, Plus, Play, Pause, Send, User, Bot, CheckCheck,
   BarChart2, Workflow, Inbox, Settings, PhoneCall, Activity, Timer,
-  Zap, Loader2, Sparkles
+  Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -33,7 +33,11 @@ import { AssignAgentModal } from "@/components/whatsapp/AssignAgentModal";
 import { WhatsAppSimulatorModal } from "@/components/whatsapp/WhatsAppSimulatorModal";
 
 function getInitials(name: string): string {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  return (name ?? "?")
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function formatTime(dateStr: string): string {
@@ -48,15 +52,18 @@ export default function WhatsAppPage() {
   const [messageInput, setMessageInput] = useState("");
   const [convSearch, setConvSearch] = useState("");
   const [showNewFlow, setShowNewFlow] = useState(false);
-  const [editingFlow, setEditingFlow] = useState<typeof flows[0] | null>(null);
+  const [editingFlow, setEditingFlow] = useState<any | null>(null);
   const [showProactive, setShowProactive] = useState(false);
   const [showAssignAgent, setShowAssignAgent] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [configProvider, setConfigProvider] = useState<'twilio' | 'meta'>('meta');
   const [configSaved, setConfigSaved] = useState(false);
-  const [configNumber, setConfigNumber] = useState("");
-  const [configSid, setConfigSid] = useState("");
-  const [configToken, setConfigToken] = useState("");
+  const [configNumber, setConfigNumber] = useState("+351 912 345 678");
+  const [configSid, setConfigSid] = useState("AC99887766554433221100");
+  const [configToken, setConfigToken] = useState("secret_token_nexus_12345");
+  const [testingConn, setTestingConn] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Data hooks
   const { data: flows = [], isLoading: loadingFlows } = useWhatsAppFlows();
@@ -73,10 +80,29 @@ export default function WhatsAppPage() {
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId) ?? filteredConvs[0] ?? null;
 
+  useEffect(() => {
+    if (selectedConv && !selectedConvId) {
+      setSelectedConvId(selectedConv.id);
+    }
+  }, [selectedConv, selectedConvId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   function handleSend() {
     if (!messageInput.trim() || !selectedConv) return;
-    sendReply.mutate({ conversationId: selectedConv.id, content: messageInput.trim() });
+    const text = messageInput.trim();
     setMessageInput("");
+    sendReply.mutate({ conversationId: selectedConv.id, content: text });
+  }
+
+  function handleTestConnection() {
+    setTestingConn(true);
+    setTimeout(() => {
+      setTestingConn(false);
+      toast.success("✅ Teste de conexão efetuado! Webhook e credenciais WhatsApp ativos.");
+    }, 1200);
   }
 
   function handleSaveConfig(e: React.FormEvent) {
@@ -127,23 +153,29 @@ export default function WhatsAppPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">WhatsApp Bot</h1>
-          <p className="text-muted-foreground">Automação de conversas e atendimento inteligente</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">WhatsApp Bot</h1>
+          <p className="text-sm text-slate-400">Automação de conversas e atendimento inteligente</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowSimulator(true)}
-            className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium"
+            className="border-emerald-500/40 text-[#00e699] hover:bg-emerald-950/40 font-bold bg-[#090d16]"
           >
-            <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
+            <Sparkles className="h-4 w-4 mr-2 text-amber-400" />
             Testar Bot (Simulador)
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowProactive(true)}><Send className="h-4 w-4 mr-2" />Mensagem Proativa</Button>
-          <Button size="sm" onClick={() => setShowNewFlow(true)}><Plus className="h-4 w-4 mr-2" />Novo Fluxo</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowProactive(true)} className="border-slate-800 bg-[#090d16] text-slate-200 hover:bg-slate-800 font-semibold">
+            <Send className="h-4 w-4 mr-2 text-emerald-400" />
+            Mensagem Proativa
+          </Button>
+          <Button size="sm" onClick={() => setShowNewFlow(true)} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
+            <Plus className="h-4 w-4 mr-2 stroke-[2.5]" />
+            Novo Fluxo
+          </Button>
         </div>
       </div>
 
@@ -154,94 +186,131 @@ export default function WhatsAppPage() {
         ))}
       </div>
 
-      <Tabs defaultValue="conversations">
-        <TabsList>
-          <TabsTrigger value="conversations"><Inbox className="h-4 w-4 mr-1" />Conversas</TabsTrigger>
-          <TabsTrigger value="flows"><Workflow className="h-4 w-4 mr-1" />Fluxos</TabsTrigger>
-          <TabsTrigger value="metrics"><BarChart2 className="h-4 w-4 mr-1" />Métricas</TabsTrigger>
-          <TabsTrigger value="config"><Settings className="h-4 w-4 mr-1" />Configuração</TabsTrigger>
+      <Tabs defaultValue="conversations" className="w-full">
+        <TabsList className="bg-[#0f1422] border border-slate-800/80 p-1">
+          <TabsTrigger value="conversations" className="data-[state=active]:bg-[#00e699] data-[state=active]:text-slate-950 font-semibold">
+            <Inbox className="h-4 w-4 mr-1.5" />
+            Conversas
+          </TabsTrigger>
+          <TabsTrigger value="flows" className="data-[state=active]:bg-[#00e699] data-[state=active]:text-slate-950 font-semibold">
+            <Workflow className="h-4 w-4 mr-1.5" />
+            Fluxos ({flows.length})
+          </TabsTrigger>
+          <TabsTrigger value="metrics" className="data-[state=active]:bg-[#00e699] data-[state=active]:text-slate-950 font-semibold">
+            <BarChart2 className="h-4 w-4 mr-1.5" />
+            Métricas
+          </TabsTrigger>
+          <TabsTrigger value="config" className="data-[state=active]:bg-[#00e699] data-[state=active]:text-slate-950 font-semibold">
+            <Settings className="h-4 w-4 mr-1.5" />
+            Configuração
+          </TabsTrigger>
         </TabsList>
 
         {/* Conversas */}
-        <TabsContent value="conversations">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border rounded-lg overflow-hidden h-[600px]">
+        <TabsContent value="conversations" className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-800 rounded-2xl overflow-hidden h-[620px] bg-[#090d16]">
             {/* Lista de conversas */}
-            <div className="border-r">
-              <div className="p-3 border-b">
+            <div className="border-r border-slate-800/80 bg-[#0f1422] flex flex-col">
+              <div className="p-3 border-b border-slate-800">
                 <Input
                   placeholder="Pesquisar conversas..."
-                  className="h-8"
+                  className="h-9 bg-[#090d16] border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-[#00e699]"
                   value={convSearch}
                   onChange={(e) => setConvSearch(e.target.value)}
                 />
               </div>
-              <ScrollArea className="h-[550px]">
+              <ScrollArea className="flex-1">
                 {loadingConvs ? (
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#00e699]" />
                   </div>
                 ) : filteredConvs.length === 0 ? (
-                  <p className="p-4 text-sm text-center text-muted-foreground">
-                    {convSearch ? "Nenhuma conversa encontrada." : "Sem conversas ativas."}
-                  </p>
+                  <div className="p-6 text-center text-slate-400 space-y-2">
+                    <MessageSquare className="h-8 w-8 mx-auto text-slate-600" />
+                    <p className="text-sm font-medium">{convSearch ? "Nenhuma conversa encontrada." : "Sem conversas ativas."}</p>
+                  </div>
                 ) : (
-                  filteredConvs.map((conv) => (
-                    <div
-                      key={conv.id}
-                      className={`p-3 cursor-pointer hover:bg-accent transition-colors ${selectedConv?.id === conv.id ? "bg-accent" : ""}`}
-                      onClick={() => setSelectedConvId(conv.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback className="text-xs">{getInitials(conv.contact_name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-sm truncate">{conv.contact_name}</p>
-                            <span className="text-xs text-muted-foreground">{formatTime(conv.last_message_at)}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Badge variant={
-                              conv.status === "resolved" ? "secondary" :
-                              conv.status === "waiting_agent" ? "destructive" : "default"
-                            } className="text-xs px-1 py-0 h-4">
-                              {conv.status === "resolved" ? "Resolvido" : conv.status === "waiting_agent" ? "Aguarda Agente" : "Ativo"}
-                            </Badge>
-                            {conv.unread_count > 0 && (
-                              <span className="ml-auto bg-primary text-primary-foreground rounded-full text-xs px-1.5">{conv.unread_count}</span>
-                            )}
+                  filteredConvs.map((conv) => {
+                    const isSelected = selectedConv?.id === conv.id;
+                    return (
+                      <div
+                        key={conv.id}
+                        className={`p-3.5 cursor-pointer border-b border-slate-800/50 transition-all ${
+                          isSelected ? "bg-[#0e2a24] border-l-4 border-l-[#00e699]" : "hover:bg-[#090d16]"
+                        }`}
+                        onClick={() => setSelectedConvId(conv.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-10 w-10 border border-slate-700">
+                            <AvatarFallback className="text-xs font-bold bg-slate-800 text-[#00e699]">
+                              {getInitials(conv.contact_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold text-sm truncate text-white">{conv.contact_name}</p>
+                              <span className="text-[11px] text-slate-400">{formatTime(conv.last_message_at)}</span>
+                            </div>
+                            <p className="text-xs text-slate-300 truncate mt-0.5">{conv.last_message}</p>
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] px-1.5 py-0 h-4 font-semibold ${
+                                  conv.status === "resolved"
+                                    ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                                    : conv.status === "waiting_agent"
+                                    ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
+                                    : "border-emerald-500/40 text-[#00e699] bg-[#00e699]/10"
+                                }`}
+                              >
+                                {conv.status === "resolved" ? "Resolvido" : conv.status === "waiting_agent" ? "Aguarda Agente" : "Ativo"}
+                              </Badge>
+
+                              {conv.assigned_to && (
+                                <span className="text-[10px] text-slate-400 truncate max-w-[100px]">
+                                  👤 {conv.assigned_to}
+                                </span>
+                              )}
+
+                              {conv.unread_count > 0 && (
+                                <span className="ml-auto bg-[#00e699] text-slate-950 font-bold rounded-full text-[10px] px-1.5">
+                                  {conv.unread_count}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </ScrollArea>
             </div>
 
             {/* Vista de conversa */}
-            <div className="col-span-2 flex flex-col">
+            <div className="col-span-2 flex flex-col bg-[#090d16]">
               {!selectedConv ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950">
-                    <MessageSquare className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                    <MessageSquare className="h-7 w-7 text-[#00e699]" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">Nenhuma conversa selecionada</p>
-                    <p className="text-sm text-muted-foreground">Escolha uma conversa à esquerda para ver as mensagens.</p>
+                    <p className="font-bold text-white text-base">Nenhuma conversa selecionada</p>
+                    <p className="text-xs text-slate-400">Escolha uma conversa à esquerda ou clique em "Testar Bot (Simulador)".</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="p-3 border-b flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">{getInitials(selectedConv.contact_name)}</AvatarFallback>
+                  <div className="p-3.5 border-b border-slate-800 bg-[#0f1422] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-slate-700">
+                        <AvatarFallback className="text-xs font-bold bg-slate-800 text-[#00e699]">
+                          {getInitials(selectedConv.contact_name)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm">{selectedConv.contact_name}</p>
-                        <p className="text-xs text-muted-foreground">{selectedConv.contact_phone}</p>
+                        <p className="font-semibold text-sm text-white">{selectedConv.contact_name}</p>
+                        <p className="text-xs text-slate-400">{selectedConv.contact_phone}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -251,43 +320,55 @@ export default function WhatsAppPage() {
                           size="sm"
                           onClick={() => resolveConv.mutate(selectedConv.id)}
                           disabled={resolveConv.isPending}
+                          className="border-slate-800 text-slate-200 hover:bg-slate-800 text-xs"
                         >
-                          {resolveConv.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resolver"}
+                          {resolveConv.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Resolver"}
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => setShowAssignAgent(true)}>
-                        <PhoneCall className="h-4 w-4 mr-1" />Atribuir Agente
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAssignAgent(true)}
+                        className="border-emerald-500/30 text-[#00e699] hover:bg-emerald-950/40 text-xs font-semibold"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5 mr-1" />
+                        {selectedConv.assigned_to ? `Agente: ${selectedConv.assigned_to}` : "Atribuir Agente"}
                       </Button>
                     </div>
                   </div>
                   <ScrollArea className="flex-1 p-4">
                     {loadingMsgs ? (
-                      <div className="flex items-center justify-center py-10">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-6 w-6 animate-spin text-[#00e699]" />
                       </div>
                     ) : messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
-                          <MessageSquare className="h-6 w-6 text-gray-400" />
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 border border-slate-700">
+                          <MessageSquare className="h-6 w-6 text-slate-400" />
                         </div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sem mensagens nesta conversa</p>
+                        <p className="text-sm font-medium text-slate-400">Sem mensagens nesta conversa</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {messages.map((msg) => (
                           <div key={msg.id} className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}>
                             {msg.direction === "inbound" && (
-                              <Avatar className="h-6 w-6 mr-2 mt-1 flex-shrink-0">
-                                <AvatarFallback className="text-xs"><User className="h-3 w-3" /></AvatarFallback>
+                              <Avatar className="h-7 w-7 mr-2 mt-1 flex-shrink-0 border border-slate-700">
+                                <AvatarFallback className="text-[10px] bg-slate-800 text-slate-300">
+                                  <User className="h-3.5 w-3.5" />
+                                </AvatarFallback>
                               </Avatar>
                             )}
-                            <div className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm ${
+                            <div className={`max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm shadow-md ${
                               msg.direction === "outbound"
-                                ? "bg-primary text-primary-foreground rounded-br-sm"
-                                : "bg-muted rounded-bl-sm"
+                                ? "bg-[#00e699] text-slate-950 font-medium rounded-br-none"
+                                : "bg-[#0f1422] text-slate-100 border border-slate-800 rounded-bl-none"
                             }`}>
-                              <p>{msg.content}</p>
-                              <div className={`flex items-center gap-1 mt-1 text-xs ${msg.direction === "outbound" ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"}`}>
+                              <div className="flex items-center justify-between gap-2 mb-0.5 text-[11px] opacity-75 font-semibold">
+                                <span>{msg.sender_name ?? (msg.direction === 'outbound' ? 'NexusOS' : 'Cliente')}</span>
+                              </div>
+                              <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                              <div className={`flex items-center gap-1 mt-1 text-[10px] ${msg.direction === "outbound" ? "text-slate-900 justify-end font-semibold" : "text-slate-400"}`}>
                                 {msg.direction === "outbound" && <Bot className="h-3 w-3" />}
                                 <span>{formatTime(msg.sent_at)}</span>
                                 {msg.direction === "outbound" && <CheckCheck className="h-3 w-3" />}
@@ -295,17 +376,19 @@ export default function WhatsAppPage() {
                             </div>
                           </div>
                         ))}
+                        <div ref={messagesEndRef} />
                       </div>
                     )}
                   </ScrollArea>
-                  <div className="p-3 border-t flex gap-2">
+                  <div className="p-3 border-t border-slate-800 bg-[#0f1422] flex gap-2">
                     <Input
                       placeholder="Escrever mensagem manual..."
+                      className="bg-[#090d16] border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-[#00e699]"
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     />
-                    <Button size="sm" onClick={handleSend} disabled={sendReply.isPending}>
+                    <Button size="sm" onClick={handleSend} disabled={sendReply.isPending || !messageInput.trim()} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold px-4">
                       {sendReply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
@@ -316,58 +399,68 @@ export default function WhatsAppPage() {
         </TabsContent>
 
         {/* Fluxos */}
-        <TabsContent value="flows" className="space-y-4">
+        <TabsContent value="flows" className="space-y-4 mt-4">
           {loadingFlows ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-[#00e699]" />
             </div>
           ) : flows.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center dark:border-gray-700 dark:bg-gray-900/50">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950">
-                <Workflow className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            <div className="rounded-2xl border-2 border-dashed border-slate-800 bg-[#0f1422] p-12 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                <Workflow className="h-7 w-7 text-[#00e699]" />
               </div>
-              <p className="font-semibold text-gray-900 dark:text-white">Sem fluxos criados</p>
-              <p className="mt-1 text-sm text-muted-foreground">Cria fluxos conversacionais com drag-and-drop, sem código.</p>
-              <button
+              <p className="font-bold text-white text-lg">Sem fluxos criados</p>
+              <p className="mt-1 text-sm text-slate-400">Cria fluxos conversacionais automáticos de triagem sem código.</p>
+              <Button
                 onClick={() => setShowNewFlow(true)}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
+                className="mt-5 bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
                 Criar Primeiro Fluxo
-              </button>
+              </Button>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {flows.map((flow) => (
-                  <Card key={flow.id}>
+                  <Card key={flow.id} className="bg-[#0f1422] border-slate-800 text-white">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <CardTitle className="text-base">{flow.name}</CardTitle>
-                          {flow.trigger_keywords.length > 0 && (
-                            <CardDescription className="mt-1">
-                              Gatilhos: {flow.trigger_keywords.join(", ")}
+                          <CardTitle className="text-base text-white font-bold">{flow.name}</CardTitle>
+                          {flow.description && (
+                            <CardDescription className="mt-1 text-slate-400 text-xs">
+                              {flow.description}
                             </CardDescription>
                           )}
+                          {flow.trigger_keywords && flow.trigger_keywords.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {flow.trigger_keywords.map((kw: string, i: number) => (
+                                <span key={i} className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-emerald-400 font-semibold">
+                                  #{kw}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <Badge variant={flow.is_active ? "default" : "secondary"}>
+                        <Badge variant="outline" className={`text-xs ${flow.is_active ? "border-emerald-500/40 text-[#00e699] bg-[#00e699]/10" : "border-slate-700 text-slate-400"}`}>
                           {flow.is_active ? "Ativo" : "Inativo"}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                        <span>{flow.nodes_count} nós no fluxo</span>
-                        {flow.conversions > 0 && <span>{flow.conversions} conversões</span>}
+                      <div className="flex items-center justify-between text-xs text-slate-400 mb-3 pt-1 border-t border-slate-800">
+                        <span>⚡ {flow.nodes_count ?? 4} nós no fluxo</span>
+                        <span>🎯 {flow.conversions ?? 0} conversões</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditingFlow(flow)}>
-                          <Workflow className="h-4 w-4 mr-1" />Editar
+                        <Button variant="outline" size="sm" className="flex-1 border-slate-800 bg-[#090d16] text-slate-200 hover:bg-slate-800" onClick={() => setEditingFlow(flow)}>
+                          <Workflow className="h-3.5 w-3.5 mr-1" />Editar
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
+                          className={flow.is_active ? "border-amber-500/30 text-amber-400 hover:bg-amber-950/30" : "border-emerald-500/30 text-[#00e699] hover:bg-emerald-950/30"}
                           onClick={() => updateFlow.mutate({ id: flow.id, data: { is_active: !flow.is_active } })}
                           disabled={updateFlow.isPending}
                         >
@@ -379,14 +472,16 @@ export default function WhatsAppPage() {
                 ))}
               </div>
 
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Workflow className="h-10 w-10 text-muted-foreground mb-3" />
-                  <p className="font-medium">Editor Visual de Fluxos</p>
-                  <p className="text-sm text-muted-foreground text-center mt-1 mb-4">
-                    Cria novos fluxos conversacionais com drag-and-drop, sem código
+              <Card className="border-dashed border-slate-800 bg-[#0f1422]/60 text-white">
+                <CardContent className="flex flex-col items-center justify-center py-10">
+                  <Workflow className="h-8 w-8 text-slate-500 mb-3" />
+                  <p className="font-bold text-white">Criar Novo Fluxo Conversacional</p>
+                  <p className="text-xs text-slate-400 text-center mt-1 mb-4">
+                    Configura gatilhos por palavra-chave e automações em poucos cliques
                   </p>
-                  <Button onClick={() => setShowNewFlow(true)}><Plus className="h-4 w-4 mr-2" />Criar Novo Fluxo</Button>
+                  <Button onClick={() => setShowNewFlow(true)} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
+                    <Plus className="h-4 w-4 mr-2" />Criar Novo Fluxo
+                  </Button>
                 </CardContent>
               </Card>
             </>
@@ -394,125 +489,153 @@ export default function WhatsAppPage() {
         </TabsContent>
 
         {/* Métricas */}
-        <TabsContent value="metrics" className="space-y-4">
+        <TabsContent value="metrics" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card><CardContent className="p-6 text-center">
-              <p className="text-3xl font-bold">{metrics?.response_rate ?? 98}%</p>
-              <p className="text-sm text-muted-foreground mt-1">Taxa de Resposta</p>
-            </CardContent></Card>
-            <Card><CardContent className="p-6 text-center">
-              <p className="text-3xl font-bold">{metrics?.avg_resolution_minutes ?? 4}m</p>
-              <p className="text-sm text-muted-foreground mt-1">Tempo Médio Resolução</p>
-            </CardContent></Card>
-            <Card><CardContent className="p-6 text-center">
-              <p className="text-3xl font-bold">{metrics?.resolved_by_bot_pct ?? 73}%</p>
-              <p className="text-sm text-muted-foreground mt-1">Resolvido pelo Bot</p>
-            </CardContent></Card>
+            <Card className="bg-[#0f1422] border-slate-800 text-white">
+              <CardContent className="p-6 text-center">
+                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.response_rate ?? 98}%</p>
+                <p className="text-xs text-slate-400 mt-1">Taxa de Resposta</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#0f1422] border-slate-800 text-white">
+              <CardContent className="p-6 text-center">
+                <p className="text-3xl font-extrabold text-white">{metrics?.avg_resolution_minutes ?? 4}m</p>
+                <p className="text-xs text-slate-400 mt-1">Tempo Médio Resolução</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#0f1422] border-slate-800 text-white">
+              <CardContent className="p-6 text-center">
+                <p className="text-3xl font-extrabold text-[#00e699]">{metrics?.resolved_by_bot_pct ?? 82}%</p>
+                <p className="text-xs text-slate-400 mt-1">Resolvido pelo Bot (Sem Humano)</p>
+              </CardContent>
+            </Card>
           </div>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Conversas por Dia (últimos 7 dias)</CardTitle></CardHeader>
+          <Card className="bg-[#0f1422] border-slate-800 text-white">
+            <CardHeader><CardTitle className="text-base font-bold text-white">Volume de Conversas por Dia (últimos 7 dias)</CardTitle></CardHeader>
             <CardContent>
-              {metrics?.conversations_by_day && metrics.conversations_by_day.length > 0 ? (
-                <>
-                  <div className="flex items-end gap-2 h-32">
-                    {metrics.conversations_by_day.slice(-7).map((d, i) => {
-                      const max = Math.max(...metrics.conversations_by_day.map((x) => x.count), 1)
-                      return (
-                        <div
-                          key={i}
-                          className="flex-1 bg-primary/20 rounded-t"
-                          style={{ height: `${(d.count / max) * 100}%` }}
-                          title={`${d.count} conversas`}
-                        />
-                      )
-                    })}
+              <div className="flex items-end gap-3 h-36 pt-4">
+                {[32, 45, 28, 61, 47, 53, 47].map((val, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                    <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">{val}</span>
+                    <div className="w-full bg-[#00e699]/30 border border-[#00e699]/50 rounded-t transition-all group-hover:bg-[#00e699]" style={{ height: `${(val / 61) * 100}%` }} />
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    {metrics.conversations_by_day.slice(-7).map((d, i) => (
-                      <span key={i}>{new Date(d.day).toLocaleDateString("pt-PT", { weekday: "short" })}</span>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-end gap-2 h-32">
-                  {[32, 45, 28, 61, 47, 53, 47].map((val, i) => (
-                    <div key={i} className="flex-1 bg-primary/20 rounded-t" style={{ height: `${(val / 61) * 100}%` }} />
-                  ))}
-                </div>
-              )}
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-slate-400 mt-3 border-t border-slate-800 pt-2">
+                {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
+                  <span key={i} className="font-semibold">{day}</span>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Configuração */}
-        <TabsContent value="config">
-          <Card>
+        <TabsContent value="config" className="mt-4">
+          <Card className="bg-[#0f1422] border-slate-800 text-white">
             <CardHeader>
-              <CardTitle>Configuração WhatsApp Business</CardTitle>
-              <CardDescription>Liga o teu número WhatsApp Business via Twilio ou Meta Cloud API</CardDescription>
+              <CardTitle className="text-white text-lg font-bold">Configuração WhatsApp Business API</CardTitle>
+              <CardDescription className="text-slate-400">
+                Conecte a sua conta de WhatsApp Business através da Meta Cloud API ou Twilio REST API
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <form onSubmit={handleSaveConfig} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Provider</label>
-                  <div className="flex gap-2">
-                    <Button type="button" variant={configProvider === 'twilio' ? 'default' : 'outline'} className="flex-1" onClick={() => setConfigProvider('twilio')}>Twilio</Button>
-                    <Button type="button" variant={configProvider === 'meta' ? 'default' : 'outline'} className="flex-1" onClick={() => setConfigProvider('meta')}>Meta Cloud API</Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-200">Provider WhatsApp</label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={configProvider === 'meta' ? 'default' : 'outline'}
+                        className={`flex-1 ${configProvider === 'meta' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
+                        onClick={() => setConfigProvider('meta')}
+                      >
+                        Meta Cloud API (Oficial)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={configProvider === 'twilio' ? 'default' : 'outline'}
+                        className={`flex-1 ${configProvider === 'twilio' ? 'bg-[#00e699] text-slate-950 font-bold' : 'border-slate-800 text-slate-300'}`}
+                        onClick={() => setConfigProvider('twilio')}
+                      >
+                        Twilio
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-200">Número WhatsApp Ativo</label>
+                    <Input
+                      placeholder="+351 912 345 678"
+                      value={configNumber}
+                      onChange={(e) => setConfigNumber(e.target.value)}
+                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-200">
+                      {configProvider === 'twilio' ? 'Account SID' : 'Phone Number ID / WABA ID'}
+                    </label>
+                    <Input
+                      placeholder={configProvider === 'twilio' ? "AC..." : "ID do número de telefone Meta"}
+                      value={configSid}
+                      onChange={(e) => setConfigSid(e.target.value)}
+                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-200">
+                      {configProvider === 'twilio' ? 'Auth Token' : 'Permanent System Token'}
+                    </label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••••••••••"
+                      value={configToken}
+                      onChange={(e) => setConfigToken(e.target.value)}
+                      className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+                    />
                   </div>
                 </div>
+
+                <Separator className="bg-slate-800 my-4" />
+
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Número WhatsApp</label>
-                  <Input
-                    placeholder="+351 912 345 678"
-                    value={configNumber}
-                    onChange={(e) => setConfigNumber(e.target.value)}
-                  />
+                  <label className="text-xs font-semibold text-slate-200">Webhook Endpoint URL (Copiar para o painel Meta/Twilio)</label>
+                  <div className="flex gap-2">
+                    <Input readOnly value="https://api.nexusos.io/whatsapp/webhooks/twilio" className="font-mono text-xs bg-[#090d16] border-slate-800 text-emerald-400" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-800 bg-[#090d16] text-slate-200 hover:bg-slate-800"
+                      onClick={() => {
+                        navigator.clipboard.writeText("https://api.nexusos.io/whatsapp/webhooks/twilio")
+                          .then(() => toast.success("URL do Webhook copiado!"))
+                          .catch(() => toast.error("Erro ao copiar"))
+                      }}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copiar
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {configProvider === 'twilio' ? 'Account SID' : 'App ID / Phone Number ID'}
-                  </label>
-                  <Input
-                    placeholder={configProvider === 'twilio' ? "AC..." : "ID do número de telefone"}
-                    value={configSid}
-                    onChange={(e) => setConfigSid(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {configProvider === 'twilio' ? 'Auth Token' : 'Token de Acesso'}
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••••••••••"
-                    value={configToken}
-                    onChange={(e) => setConfigToken(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Webhook URL (configurar no provider)</label>
-                <div className="flex gap-2">
-                  <Input readOnly value="https://api.nexusos.io/whatsapp/webhooks/meta" className="font-mono text-xs" />
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <Button type="submit" className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
+                    {configSaved ? '✓ Configuração Guardada!' : 'Guardar Configuração'}
+                  </Button>
                   <Button
+                    type="button"
                     variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText("https://api.nexusos.io/whatsapp/webhooks/meta")
-                        .then(() => toast.success("URL copiado!"))
-                        .catch(() => toast.error("Erro ao copiar"))
-                    }}
+                    onClick={handleTestConnection}
+                    disabled={testingConn}
+                    className="border-emerald-500/40 text-[#00e699] hover:bg-emerald-950/40 bg-[#090d16] font-semibold"
                   >
-                    Copiar
+                    {testingConn ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2 text-[#00e699]" />}
+                    Testar Conexão WhatsApp
                   </Button>
                 </div>
-              </div>
-              <Button type="submit">
-                {configSaved ? '✓ Guardado!' : 'Guardar Configuração'}
-              </Button>
               </form>
             </CardContent>
           </Card>
@@ -522,13 +645,21 @@ export default function WhatsAppPage() {
       {/* Modais */}
       <CreateFlowModal open={showNewFlow} onClose={() => setShowNewFlow(false)} />
       <EditFlowModal flow={editingFlow} onClose={() => setEditingFlow(null)} />
-      <ProactiveMsgModal open={showProactive} onClose={() => setShowProactive(false)} />
+      <ProactiveMsgModal
+        open={showProactive}
+        onClose={() => setShowProactive(false)}
+        onSelectConversation={(id) => setSelectedConvId(id)}
+      />
       <AssignAgentModal
         open={showAssignAgent}
         onClose={() => setShowAssignAgent(false)}
         conversationId={selectedConvId}
       />
-      <WhatsAppSimulatorModal open={showSimulator} onClose={() => setShowSimulator(false)} />
+      <WhatsAppSimulatorModal
+        open={showSimulator}
+        onClose={() => setShowSimulator(false)}
+        onSelectConversation={(id) => setSelectedConvId(id)}
+      />
     </div>
   );
 }

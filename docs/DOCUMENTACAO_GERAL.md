@@ -141,6 +141,16 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 
 ## 7. Registro de Alterações (Changelog Automático)
 
+### [2026-08-11] — Implementação Completa & Interativa do Módulo WhatsApp Bot (`/whatsapp`)
+* **Persistência de Dados & Seed SQL (`seed.sql`):** Adicionados dados de semente para `whatsapp_configs`, `conversation_flows`, `contacts`, `conversations` e `messages`, garantindo dados de demonstração realistas em base de dados.
+* **Fallbacks & Cache Reativo no React Query (`useWhatsApp.ts`):** Implementada estrutura de dados de demonstração com atualização otimista de cache, permitindo criar conversas, enviar respostas e simular fluxos mesmo em ambiente offline.
+* **Simulador WhatsApp Conectado ao Vivo (`WhatsAppSimulatorModal.tsx`):** O simulador interativo GPT-4o sincroniza agora em tempo real as conversas simuladas diretamente com a lista de atendimento do WhatsApp Bot.
+* **Modais Interativos de Ação (`CreateFlowModal`, `ProactiveMsgModal`, `AssignAgentModal`, `EditFlowModal`):**
+  - *Novo Fluxo:* Suporte a palavras-chave gatilho e criação rápida de fluxos de triagem.
+  - *Mensagem Proativa:* Envio de mensagem direta com criação instantânea de contacto e seleção automática de conversa.
+  - *Atribuir Agente:* Carregamento e atribuição de membros reais da equipa.
+* **Redesign Visual Dark Navy & Mint Green (`/whatsapp/page.tsx`):** Reestruturação visual completa com tema escuro `#090d16` / `#0f1422` e detalhes em Verde Menta `#00e699`, gráficos de volume de conversas e separador de configuração de APIs (Meta Cloud API / Twilio).
+
 ### [2026-08-11] — Validação de Build & Preparação para Deploy na Vercel
 * **Ajuste de Configuração da Vercel (`vercel.json`):** Removido o comando redundante `cd frontend` das configurações de build para compatibilidade com o Root Directory `frontend` configurado no painel da Vercel.
 * **Criação do Componente UI Textarea (`textarea.tsx`):** Adicionado o componente `Textarea` em `frontend/components/ui/textarea.tsx` para suporte nativo ao formulário de `/feedback`.

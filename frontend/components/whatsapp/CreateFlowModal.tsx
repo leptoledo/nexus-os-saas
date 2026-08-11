@@ -27,11 +27,12 @@ export function CreateFlowModal({ open, onClose }: CreateFlowModalProps) {
   const [form, setForm] = useState({
     name: '',
     trigger_type: 'keyword',
+    keywords: 'preço, orçamento, demo',
     description: '',
   })
 
   function handleClose() {
-    setForm({ name: '', trigger_type: 'keyword', description: '' })
+    setForm({ name: '', trigger_type: 'keyword', keywords: 'preço, orçamento, demo', description: '' })
     onClose()
   }
 
@@ -39,9 +40,14 @@ export function CreateFlowModal({ open, onClose }: CreateFlowModalProps) {
     e.preventDefault()
     if (!form.name.trim()) return
     try {
+      const keywordsArray = form.keywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter(Boolean)
+
       await createFlow.mutateAsync({
         name: form.name.trim(),
-        trigger_type: form.trigger_type,
+        trigger_keywords: keywordsArray,
         description: form.description.trim() || undefined,
       })
       toast.success(`Fluxo "${form.name}" criado com sucesso!`)
@@ -53,52 +59,66 @@ export function CreateFlowModal({ open, onClose }: CreateFlowModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#0f1422] text-white border border-slate-800">
         <DialogHeader>
-          <DialogTitle>Novo Fluxo WhatsApp</DialogTitle>
+          <DialogTitle className="text-white text-lg font-bold">Novo Fluxo WhatsApp</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="flow-name">Nome do Fluxo *</Label>
+            <Label htmlFor="flow-name" className="text-slate-200">Nome do Fluxo *</Label>
             <Input
               id="flow-name"
               placeholder="Ex: Suporte — Triagem Automática"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
               required
               autoFocus
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Tipo de Gatilho</Label>
+            <Label className="text-slate-200">Tipo de Gatilho</Label>
             <Select value={form.trigger_type} onValueChange={(v) => setForm((f) => ({ ...f, trigger_type: v }))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#090d16] border-slate-800 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#0f1422] border-slate-800 text-white">
                 {TRIGGER_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {form.trigger_type === 'keyword' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="flow-keywords" className="text-slate-200">Palavras-chave (separadas por vírgula)</Label>
+              <Input
+                id="flow-keywords"
+                placeholder="preço, orçamento, planos, demo"
+                value={form.keywords}
+                onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+                className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="flow-desc">Descrição (opcional)</Label>
+            <Label htmlFor="flow-desc" className="text-slate-200">Descrição (opcional)</Label>
             <Input
               id="flow-desc"
               placeholder="Para que serve este fluxo..."
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            O fluxo será criado inativo. Podes configurar as etapas e ativá-lo depois.
+          <p className="text-xs text-slate-400">
+            O fluxo será criado com o modo ativo por padrão para atendimento imediato.
           </p>
           <DialogFooter className="gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} className="border-slate-800 text-slate-300 hover:bg-slate-800">
               Cancelar
             </Button>
-            <Button type="submit" disabled={createFlow.isPending || !form.name.trim()}>
+            <Button type="submit" disabled={createFlow.isPending || !form.name.trim()} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
               {createFlow.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Criar Fluxo
             </Button>

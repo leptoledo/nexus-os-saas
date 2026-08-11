@@ -625,5 +625,64 @@ INSERT INTO audit_logs (org_id, user_id, action, resource_type, resource_id, det
   ('b1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'project.created',      'project',      'c1000000-0000-0000-0000-000000000001', '{"name":"Plataforma NexusOS v2"}', '192.168.1.1');
 
 -- ============================================================
+-- SEED: WhatsApp Module
+-- ============================================================
+
+INSERT INTO whatsapp_configs (id, org_id, provider, phone_number, is_active, webhook_url) VALUES
+  (
+    'w1000000-0000-0000-0000-000000000001',
+    'b1000000-0000-0000-0000-000000000001',
+    'meta',
+    '+351912345678',
+    true,
+    'https://nexusos.io/api/whatsapp/webhooks/twilio'
+  )
+ON CONFLICT (org_id) DO NOTHING;
+
+INSERT INTO conversation_flows (id, org_id, name, description, trigger_keywords, flow_data, is_active, created_by) VALUES
+  (
+    'f2000000-0000-0000-0000-000000000001',
+    'b1000000-0000-0000-0000-000000000001',
+    'Qualificação Automática de Leads',
+    'Fluxo principal de atendimento e triagem inicial de novos contactos',
+    ARRAY['preço', 'plano', 'orçamento', 'demo', 'informação'],
+    '{"nodes":[{"id":"n1","type":"message","content":"👋 Olá! Bem-vindo à NexusOS. Como podemos impulsionar o seu negócio hoje?"}]}',
+    true,
+    'a1000000-0000-0000-0000-000000000001'
+  ),
+  (
+    'f2000000-0000-0000-0000-000000000002',
+    'b1000000-0000-0000-0000-000000000001',
+    'Suporte Técnico 24/7',
+    'Atendimento automático fora de horas para dúvidas frequentes',
+    ARRAY['ajuda', 'suporte', 'erro', 'problema', 'ticket'],
+    '{"nodes":[{"id":"n1","type":"message","content":"🛠️ Olá! Registámos o seu pedido de suporte. Um especialista responderá em menos de 15 min."}]}',
+    false,
+    'a1000000-0000-0000-0000-000000000001'
+  );
+
+INSERT INTO contacts (id, org_id, phone_number, name, email, tags, opt_in, opted_in_at) VALUES
+  ('c2000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', '+351919876543', 'João Silva', 'joao.silva@empresa.pt', ARRAY['VIP', 'Lead'], true, now() - interval '5 days'),
+  ('c2000000-0000-0000-0000-000000000002', 'b1000000-0000-0000-0000-000000000002', '+351931122334', 'Maria Santos', 'maria.santos@tech.pt', ARRAY['Cliente Pro'], true, now() - interval '3 days'),
+  ('c2000000-0000-0000-0000-000000000003', 'b1000000-0000-0000-0000-000000000003', '+351964455667', 'Pedro Oliveira', 'pedro@inovacao.com', ARRAY['Novo Lead'], true, now() - interval '1 day')
+ON CONFLICT (org_id, phone_number) DO NOTHING;
+
+INSERT INTO conversations (id, org_id, contact_id, status, assigned_to, started_at) VALUES
+  ('v1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'c2000000-0000-0000-0000-000000000001', 'active', 'a1000000-0000-0000-0000-000000000002', now() - interval '2 hours'),
+  ('v1000000-0000-0000-0000-000000000002', 'b1000000-0000-0000-0000-000000000001', 'c2000000-0000-0000-0000-000000000002', 'waiting_agent', null, now() - interval '4 hours'),
+  ('v1000000-0000-0000-0000-000000000003', 'b1000000-0000-0000-0000-000000000001', 'c2000000-0000-0000-0000-000000000003', 'resolved', 'a1000000-0000-0000-0000-000000000001', now() - interval '1 day');
+
+INSERT INTO messages (conversation_id, org_id, direction, content, type, status, sent_at) VALUES
+  ('v1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'inbound', 'Olá! Gostaria de saber mais sobre o plano Pro da agência.', 'text', 'read', now() - interval '2 hours'),
+  ('v1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'outbound', '👋 Olá João! O plano Pro inclui automação de WhatsApp, CRM ilimitado e relatórios de IA.', 'text', 'read', now() - interval '1 hour 55 min'),
+  ('v1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'inbound', 'Excelente! Qual o valor mensal e como agendo uma demo?', 'text', 'read', now() - interval '10 min'),
+
+  ('v1000000-0000-0000-0000-000000000002', 'b1000000-0000-0000-0000-000000000001', 'inbound', 'Preciso de ajuda urgente para integrar as campanhas de Meta Ads.', 'text', 'read', now() - interval '4 hours'),
+  ('v1000000-0000-0000-0000-000000000002', 'b1000000-0000-0000-0000-000000000001', 'outbound', '🤖 Olá Maria! Estou a transferir o seu atendimento para um gestor de conta humano.', 'text', 'sent', now() - interval '3 hours 50 min'),
+
+  ('v1000000-0000-0000-0000-000000000003', 'b1000000-0000-0000-0000-000000000001', 'inbound', 'Onde posso descarregar a fatura deste mês?', 'text', 'read', now() - interval '1 day'),
+  ('v1000000-0000-0000-0000-000000000003', 'b1000000-0000-0000-0000-000000000001', 'outbound', '📄 Olá Pedro! As faturas estão disponíveis no menu Definições > Assinatura & Faturação.', 'text', 'read', now() - interval '23 hours');
+
+-- ============================================================
 -- End of seed data
 -- ============================================================

@@ -13,7 +13,7 @@ import { useUpdateFlow } from '@/hooks/useWhatsApp'
 interface Flow {
   id: string
   name: string
-  trigger_type?: string
+  trigger_keywords?: string[]
   is_active: boolean
 }
 
@@ -32,12 +32,14 @@ const TRIGGER_TYPES = [
 export function EditFlowModal({ flow, onClose }: EditFlowModalProps) {
   const updateFlow = useUpdateFlow()
   const [name, setName] = useState('')
+  const [keywords, setKeywords] = useState('')
   const [triggerType, setTriggerType] = useState('keyword')
 
   useEffect(() => {
     if (flow) {
       setName(flow.name)
-      setTriggerType(flow.trigger_type ?? 'keyword')
+      setKeywords(flow.trigger_keywords?.join(', ') ?? '')
+      setTriggerType('keyword')
     }
   }, [flow])
 
@@ -49,7 +51,15 @@ export function EditFlowModal({ flow, onClose }: EditFlowModalProps) {
     e.preventDefault()
     if (!flow || !name.trim()) return
     try {
-      await updateFlow.mutateAsync({ id: flow.id, data: { name: name.trim() } })
+      const keywordsArray = keywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter(Boolean)
+
+      await updateFlow.mutateAsync({
+        id: flow.id,
+        data: { name: name.trim() },
+      })
       toast.success('Fluxo atualizado!')
       handleClose()
     } catch (err) {
@@ -59,28 +69,37 @@ export function EditFlowModal({ flow, onClose }: EditFlowModalProps) {
 
   return (
     <Dialog open={!!flow} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#0f1422] text-white border border-slate-800">
         <DialogHeader>
-          <DialogTitle>Editar Fluxo</DialogTitle>
+          <DialogTitle className="text-white text-lg font-bold">Editar Fluxo</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="edit-flow-name">Nome do Fluxo *</Label>
+            <Label htmlFor="edit-flow-name" className="text-slate-200">Nome do Fluxo *</Label>
             <Input
               id="edit-flow-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
               required
               autoFocus
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Tipo de Gatilho</Label>
+            <Label className="text-slate-200">Palavras-chave (separadas por vírgula)</Label>
+            <Input
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-slate-200">Tipo de Gatilho</Label>
             <Select value={triggerType} onValueChange={setTriggerType}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#090d16] border-slate-800 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#0f1422] border-slate-800 text-white">
                 {TRIGGER_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
@@ -88,10 +107,10 @@ export function EditFlowModal({ flow, onClose }: EditFlowModalProps) {
             </Select>
           </div>
           <DialogFooter className="gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} className="border-slate-800 text-slate-300 hover:bg-slate-800">
               Cancelar
             </Button>
-            <Button type="submit" disabled={updateFlow.isPending || !name.trim()}>
+            <Button type="submit" disabled={updateFlow.isPending || !name.trim()} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
               {updateFlow.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Guardar
             </Button>
