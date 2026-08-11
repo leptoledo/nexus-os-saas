@@ -56,6 +56,8 @@ const VIEWS = [
   { id: 'calendar', label: 'Calendário', icon: Calendar },
 ]
 
+const TOTAL_GANTT_DAYS = 14
+
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
