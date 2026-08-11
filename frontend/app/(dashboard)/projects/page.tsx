@@ -35,7 +35,7 @@ import {
   useCreateTask,
   useDeleteTask,
 } from '@/hooks/useProjects'
-import type { Project, Task } from '@/types'
+import type { Project, Task, TaskStatus } from '@/types'
 
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
