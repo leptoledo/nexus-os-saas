@@ -35,7 +35,18 @@ import {
   useCreateTask,
   useDeleteTask,
 } from '@/hooks/useProjects'
-import type { Project, Task, TaskStatus } from '@/types'
+import type { Project, Task, TaskStatus, ProjectStatus } from '@/types'
+
+const STATUS_PROJECT_CONFIG: Record<
+  ProjectStatus,
+  { label: string; icon: React.ElementType; color: string }
+> = {
+  planning: { label: 'Planeamento', icon: Clock, color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  active: { label: 'Em Progresso', icon: Play, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  on_hold: { label: 'Pausado', icon: AlertCircle, color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  completed: { label: 'Concluído', icon: CheckCircle2, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  archived: { label: 'Arquivado', icon: Square, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
+}
 
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
