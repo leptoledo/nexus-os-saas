@@ -147,7 +147,9 @@ Cada pedido enviado à API carrega o cabeçalho `Authorization: Bearer <JWT>`. O
 * **Simulador WhatsApp Conectado ao Vivo (`WhatsAppSimulatorModal.tsx`):** O simulador interativo GPT-4o sincroniza agora em tempo real as conversas simuladas diretamente com a lista de atendimento do WhatsApp Bot.
 * **Modais Interativos de Ação (`CreateFlowModal`, `ProactiveMsgModal`, `AssignAgentModal`, `EditFlowModal`):**
   - *Novo Fluxo:* Suporte a palavras-chave gatilho e criação rápida de fluxos de triagem.
-  - *Mensagem Proativa:* Envio de mensagem direta com criação instantânea de contacto e seleção automática de conversa.
+* **Envio Real de Mensagens Proativas & Agenda de Contactos (`ProactiveMsgModal.tsx`):**
+  - Integração com a chamada real ao endpoint de backend `/whatsapp/send` e tratamento gracioso em dev/staging.
+  - Adicionado seletor da **Agenda de Contactos da Empresa** (ex: *Leandro Toledo*, *João Silva*, *Maria Santos*, *Pedro Oliveira*), preenchendo automaticamente nome e telemóvel (`+351 912 329 104`) e abrindo a nova conversa na lista ao enviar.
   - *Atribuir Agente:* Carregamento e atribuição de membros reais da equipa.
 * **Redesign Visual Dark Navy & Mint Green (`/whatsapp/page.tsx`):** Reestruturação visual completa com tema escuro `#090d16` / `#0f1422` e detalhes em Verde Menta `#00e699`, gráficos de volume de conversas e separador de configuração de APIs (Meta Cloud API / Twilio).
 

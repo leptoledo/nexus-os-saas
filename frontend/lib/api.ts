@@ -418,6 +418,12 @@ export const whatsappApi = {
     apiClient.get<{ data: any[] }>(`/whatsapp/conversations/${conversationId}/messages`),
   sendReply: (conversationId: string, content: string) =>
     apiClient.post<any>(`/whatsapp/conversations/${conversationId}/reply`, { content }),
+  sendProactiveMessage: (to: string, message: string, media_url?: string) =>
+    apiClient.post<{ message: string; sid?: string; conversation_id?: string }>('/whatsapp/send', { to, message, media_url }),
+  getContacts: (params?: { q?: string; page?: number }) =>
+    apiClient.get<{ data: any[]; total?: number }>('/whatsapp/contacts', params),
+  createContact: (data: { phone_number: string; name?: string; email?: string; tags?: string[] }) =>
+    apiClient.post<any>('/whatsapp/contacts', data),
   resolveConversation: (conversationId: string) =>
     apiClient.post<any>(`/whatsapp/conversations/${conversationId}/resolve`),
   assignConversation: (conversationId: string, agentId: string) =>

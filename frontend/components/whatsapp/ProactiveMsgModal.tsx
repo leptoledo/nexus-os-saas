@@ -6,9 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { DEFAULT_MESSAGES } from '@/hooks/useWhatsApp'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, Send, BookUser, UserCheck } from 'lucide-react'
+import { useWhatsAppContacts, useSendProactiveMessage } from '@/hooks/useWhatsApp'
 
 interface ProactiveMsgModalProps {
   open: boolean
@@ -17,62 +17,55 @@ interface ProactiveMsgModalProps {
 }
 
 export function ProactiveMsgModal({ open, onClose, onSelectConversation }: ProactiveMsgModalProps) {
-  const queryClient = useQueryClient()
-  const [loading, setLoading] = useState(false)
+  const { data: contacts = [] } = useWhatsAppContacts()
+  const sendProactive = useSendProactiveMessage()
+
   const [form, setForm] = useState({ phone: '', name: '', message: '' })
+  const [selectedContactId, setSelectedContactId] = useState<string>('custom')
 
   function handleClose() {
     setForm({ phone: '', name: '', message: '' })
+    setSelectedContactId('custom')
     onClose()
+  }
+
+  function handleSelectContact(contactId: string) {
+    setSelectedContactId(contactId)
+    if (contactId === 'custom') {
+      setForm((f) => ({ ...f, name: '', phone: '' }))
+      return
+    }
+    const contact = contacts.find((c: any) => c.id === contactId)
+    if (contact) {
+      setForm((f) => ({
+        ...f,
+        name: contact.name ?? '',
+        phone: contact.phone_number ?? '',
+      }))
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.phone.trim() || !form.message.trim()) return
-    setLoading(true)
+
     try {
-      await new Promise((r) => setTimeout(r, 500))
+      const res = await sendProactive.mutateAsync({
+        to: form.phone.trim(),
+        message: form.message.trim(),
+        name: form.name.trim() || undefined,
+      })
 
-      const convId = `pro-${Date.now()}`
-      const contactName = form.name.trim() || `Contacto (${form.phone.trim()})`
-      const nowIso = new Date().toISOString()
+      const contactName = form.name.trim() || form.phone.trim()
+      toast.success(`Mensagem proativa enviada com sucesso para ${contactName}!`)
 
-      const newMsg = {
-        id: `msg-${Date.now()}`,
-        direction: 'outbound' as const,
-        content: form.message.trim(),
-        sent_at: nowIso,
-        sender_name: 'NexusOS Agent',
+      if (res?.conversation_id && onSelectConversation) {
+        onSelectConversation(res.conversation_id)
       }
 
-      DEFAULT_MESSAGES[convId] = [newMsg]
-
-      // Set messages cache
-      queryClient.setQueryData(['whatsapp', 'conversations', convId, 'messages'], [newMsg])
-
-      // Add to conversation list cache
-      const newConv = {
-        id: convId,
-        contact_name: contactName,
-        contact_phone: form.phone.trim(),
-        last_message: form.message.trim(),
-        last_message_at: nowIso,
-        status: 'active' as const,
-        unread_count: 0,
-        assigned_to: 'NexusOS Agent',
-      }
-
-      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => [newConv, ...old])
-
-      toast.success(`Mensagem proativa enviada para ${contactName}`)
-      if (onSelectConversation) {
-        onSelectConversation(convId)
-      }
       handleClose()
-    } catch (err) {
-      toast.error('Erro ao enviar mensagem proativa')
-    } finally {
-      setLoading(false)
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Erro ao enviar mensagem proativa')
     }
   }
 
@@ -80,53 +73,93 @@ export function ProactiveMsgModal({ open, onClose, onSelectConversation }: Proac
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="sm:max-w-md bg-[#0f1422] text-white border border-slate-800">
         <DialogHeader>
-          <DialogTitle className="text-white text-lg font-bold">Mensagem Proativa</DialogTitle>
+          <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
+            <BookUser className="w-5 h-5 text-[#00e699]" />
+            Enviar Mensagem Proativa
+          </DialogTitle>
           <DialogDescription className="text-slate-400">
-            Envia uma mensagem de iniciativa para um número WhatsApp
+            Selecione um contacto da agenda ou insira um novo número para enviar via WhatsApp API
           </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Seletor de Agenda de Contactos */}
           <div className="space-y-1.5">
-            <Label htmlFor="proactive-name" className="text-slate-200">Nome do Contacto (opcional)</Label>
+            <Label className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-[#00e699]" />
+              Agenda de Contactos da Empresa
+            </Label>
+            <Select value={selectedContactId} onValueChange={handleSelectContact}>
+              <SelectTrigger className="bg-[#090d16] border-slate-800 text-white focus:ring-[#00e699]">
+                <SelectValue placeholder="Escolher da agenda..." />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0f1422] border-slate-800 text-white">
+                <SelectItem value="custom" className="font-semibold text-emerald-400">
+                  + Outro / Digitar Número Personalizado
+                </SelectItem>
+                {contacts.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id} className="text-slate-200">
+                    👤 {c.name} ({c.phone_number})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="proactive-name" className="text-slate-200 text-xs font-semibold">
+              Nome do Destinatário
+            </Label>
             <Input
               id="proactive-name"
-              placeholder="Ex: Carlos Mendes"
+              placeholder="Ex: Leandro Toledo"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
             />
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="proactive-phone" className="text-slate-200">Número de Telemóvel WhatsApp *</Label>
+            <Label htmlFor="proactive-phone" className="text-slate-200 text-xs font-semibold">
+              Número de Telemóvel (com indicativo) *
+            </Label>
             <Input
               id="proactive-phone"
-              placeholder="+351 912 345 678"
+              placeholder="+351 912 329 104"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               className="bg-[#090d16] border-slate-800 text-white focus-visible:ring-[#00e699]"
               required
             />
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="proactive-msg" className="text-slate-200">Mensagem *</Label>
+            <Label htmlFor="proactive-msg" className="text-slate-200 text-xs font-semibold">
+              Conteúdo da Mensagem *
+            </Label>
             <textarea
               id="proactive-msg"
               rows={4}
-              placeholder="Olá! Temos uma proposta especial para o seu negócio..."
+              placeholder="Olá! Gostaria de agendar uma reunião para tratarmos da implementação do sistema?"
               value={form.message}
               onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
               required
-              className="w-full rounded-md border border-slate-800 bg-[#090d16] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00e699] resize-none"
+              className="w-full rounded-xl border border-slate-800 bg-[#090d16] px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00e699] resize-none"
             />
-            <p className="text-xs text-slate-500">{form.message.length}/1024 caracteres</p>
+            <p className="text-[11px] text-slate-500 text-right">{form.message.length}/1024 caracteres</p>
           </div>
+
           <DialogFooter className="gap-2 pt-2">
             <Button type="button" variant="outline" onClick={handleClose} className="border-slate-800 text-slate-300 hover:bg-slate-800">
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !form.phone.trim() || !form.message.trim()} className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold">
-              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-              Enviar Mensagem
+            <Button
+              type="submit"
+              disabled={sendProactive.isPending || !form.phone.trim() || !form.message.trim()}
+              className="bg-[#00e699] hover:bg-[#05df8a] text-slate-950 font-bold"
+            >
+              {sendProactive.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+              Enviar no WhatsApp
             </Button>
           </DialogFooter>
         </form>

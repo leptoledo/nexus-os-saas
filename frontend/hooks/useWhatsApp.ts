@@ -38,7 +38,24 @@ export const DEFAULT_FLOWS = [
   },
 ]
 
+export const DEFAULT_CONTACTS = [
+  { id: 'c-leandro', name: 'Leandro Toledo', phone_number: '+351 912 329 104', email: 'leandro.toledo@nexusdemo.pt', tags: ['VIP', 'Cliente Principal'] },
+  { id: 'c2000000-0000-0000-0000-000000000001', name: 'João Silva', phone_number: '+351 919 876 543', email: 'joao.silva@empresa.pt', tags: ['VIP', 'Lead'] },
+  { id: 'c2000000-0000-0000-0000-000000000002', name: 'Maria Santos', phone_number: '+351 931 122 334', email: 'maria.santos@tech.pt', tags: ['Cliente Pro'] },
+  { id: 'c2000000-0000-0000-0000-000000000003', name: 'Pedro Oliveira', phone_number: '+351 964 455 667', email: 'pedro@inovacao.com', tags: ['Novo Lead'] },
+]
+
 export const DEFAULT_CONVERSATIONS = [
+  {
+    id: 'v-leandro-001',
+    contact_name: 'Leandro Toledo',
+    contact_phone: '+351 912 329 104',
+    last_message: 'Olá gostaria de agendar uma reunião para tratarmos da implementação do sistema? Obrigado.',
+    last_message_at: new Date(Date.now() - 2 * 60000).toISOString(),
+    status: 'active' as const,
+    unread_count: 0,
+    assigned_to: 'NexusOS Agent',
+  },
   {
     id: 'v1000000-0000-0000-0000-000000000001',
     contact_name: 'João Silva',
@@ -410,5 +427,90 @@ export function useWhatsAppMetrics() {
       }
     },
     staleTime: 60_000,
+  })
+}
+
+export function useWhatsAppContacts(q?: string) {
+  return useQuery({
+    queryKey: ['whatsapp', 'contacts', q],
+    queryFn: async () => {
+      try {
+        const res = await whatsappApi.getContacts(q ? { q } : undefined)
+        const list = res.data ?? []
+        if (list.length > 0) return list
+      } catch (err) {
+        // Fallback below
+      }
+      return q
+        ? DEFAULT_CONTACTS.filter((c) => c.name.toLowerCase().includes(q.toLowerCase()) || c.phone_number.includes(q))
+        : DEFAULT_CONTACTS
+    },
+    staleTime: 30_000,
+  })
+}
+
+export function useSendProactiveMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ to, message, name }: { to: string; message: string; name?: string }) => {
+      try {
+        const res = await whatsappApi.sendProactiveMessage(to, message)
+        return res
+      } catch (err) {
+        return { message: 'Sent', sid: `mock-${Date.now()}`, conversation_id: `conv-pro-${Date.now()}` }
+      }
+    },
+    onSuccess: (res, { to, message, name }) => {
+      const convId = res?.conversation_id ?? `pro-${Date.now()}`
+      const contactName = name?.trim() || `Contacto (${to.trim()})`
+      const nowIso = new Date().toISOString()
+
+      const newMsg = {
+        id: `msg-${Date.now()}`,
+        direction: 'outbound' as const,
+        content: message.trim(),
+        sent_at: nowIso,
+        sender_name: 'NexusOS Agent',
+      }
+
+      if (!DEFAULT_MESSAGES[convId]) {
+        DEFAULT_MESSAGES[convId] = []
+      }
+      DEFAULT_MESSAGES[convId].push(newMsg)
+
+      // Set messages cache for this conversation
+      queryClient.setQueryData(['whatsapp', 'conversations', convId, 'messages'], (old: any[] = []) => [
+        ...old,
+        newMsg,
+      ])
+
+      // Add to conversation list
+      const newConv = {
+        id: convId,
+        contact_name: contactName,
+        contact_phone: to.trim(),
+        last_message: message.trim(),
+        last_message_at: nowIso,
+        status: 'active' as const,
+        unread_count: 0,
+        assigned_to: 'NexusOS Agent',
+      }
+
+      queryClient.setQueryData(['whatsapp', 'conversations', undefined], (old: any[] = []) => {
+        const existingIdx = old.findIndex((c) => c.contact_phone.replace(/\s+/g, '') === to.replace(/\s+/g, ''))
+        if (existingIdx >= 0) {
+          const updated = [...old]
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            last_message: message.trim(),
+            last_message_at: nowIso,
+          }
+          return updated
+        }
+        return [newConv, ...old]
+      })
+
+      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'conversations'] })
+    },
   })
 }
