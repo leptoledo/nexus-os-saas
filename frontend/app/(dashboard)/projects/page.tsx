@@ -49,6 +49,13 @@ const STATUS_PROJECT_CONFIG: Record<
   archived: { label: 'Arquivado', icon: Square, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
 }
 
+const VIEWS = [
+  { id: 'kanban', label: 'Kanban', icon: Kanban },
+  { id: 'list', label: 'Lista', icon: List },
+  { id: 'gantt', label: 'Gantt', icon: GanttChartSquare },
+  { id: 'calendar', label: 'Calendário', icon: Calendar },
+]
+
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
