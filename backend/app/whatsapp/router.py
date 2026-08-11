@@ -42,10 +42,17 @@ def _not_found(entity: str = "Resource") -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{entity} not found")
 
 
-def _twilio_send(to: str, body: str, from_number: Optional[str] = None, media_url: Optional[str] = None) -> Dict[str, Any]:
+def _twilio_send(
+    to: str,
+    body: str,
+    from_number: Optional[str] = None,
+    media_url: Optional[str] = None,
+    account_sid: Optional[str] = None,
+    auth_token: Optional[str] = None,
+) -> Dict[str, Any]:
     """Send a WhatsApp message via Twilio REST API (with graceful fallback for dev/demo)."""
-    sid_val = getattr(settings, "TWILIO_ACCOUNT_SID", None)
-    auth_val = getattr(settings, "TWILIO_AUTH_TOKEN", None)
+    sid_val = account_sid or getattr(settings, "TWILIO_ACCOUNT_SID", None)
+    auth_val = auth_token or getattr(settings, "TWILIO_AUTH_TOKEN", None)
 
     if not sid_val or not auth_val or sid_val.startswith("AC_") or sid_val == "placeholder":
         logger.info("Twilio API credentials not configured — recorded message locally for %s", to)

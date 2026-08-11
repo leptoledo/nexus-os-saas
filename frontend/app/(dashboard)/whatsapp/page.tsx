@@ -14,7 +14,7 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import {
   MessageSquare, Plus, Play, Pause, Send, User, Bot, CheckCheck,
   BarChart2, Workflow, Inbox, Settings, PhoneCall, Activity, Timer,
-  Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone
+  Zap, Loader2, Sparkles, Copy, Check, ShieldCheck, Phone, AlertTriangle
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -177,6 +177,33 @@ export default function WhatsAppPage() {
             Novo Fluxo
           </Button>
         </div>
+      </div>
+
+      {/* Alerta Modo de Envio Real vs Simulação */}
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="text-xs space-y-0.5">
+            <p className="font-bold text-amber-300 text-sm">Disparo Real para Telemóveis Físicos</p>
+            <p className="text-slate-300">
+              Para que as mensagens sejam entregues diretamente no telemóvel físico do WhatsApp (<span className="text-emerald-400 font-semibold">+351 912 329 104</span>), insira o seu <strong>Account SID / Auth Token</strong> ou <strong>Meta Cloud Token</strong> no separador <strong>Configuração</strong> (ou associe o telemóvel à Sandbox do Twilio).
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            const configTab = document.querySelector('[data-value="config"]') as HTMLElement;
+            configTab?.click();
+          }}
+          className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 shrink-0 text-xs font-semibold bg-[#090d16]"
+        >
+          <Settings className="h-3.5 w-3.5 mr-1.5" />
+          Configurar Provedor Real
+        </Button>
       </div>
 
       {/* KPIs */}
