@@ -428,6 +428,9 @@ export const whatsappApi = {
     apiClient.post<any>(`/whatsapp/conversations/${conversationId}/resolve`),
   assignConversation: (conversationId: string, agentId: string) =>
     apiClient.post<any>(`/whatsapp/conversations/${conversationId}/assign`, { agent_id: agentId }),
+  getConfig: () => apiClient.get<any>('/whatsapp/config'),
+  saveConfig: (data: any) => apiClient.put<any>('/whatsapp/config', data),
+  testConfig: () => apiClient.post<any>('/whatsapp/config/test'),
 
   getMetrics: () => apiClient.get<any>('/whatsapp/metrics'),
 }

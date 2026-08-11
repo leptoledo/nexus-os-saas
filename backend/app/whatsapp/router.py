@@ -77,6 +77,26 @@ def _twilio_send(
         return {"sid": f"local-fallback-{int(datetime.now(tz.utc).timestamp())}", "status": "sent"}
 
 
+def _twilio_send_for_org(
+    admin, org_id: str, to: str, body_text: str, media_url: Optional[str] = None
+) -> Dict[str, Any]:
+    """Fetch saved org Twilio config from Supabase and dispatch message via Twilio API."""
+    sid = None
+    token = None
+    from_num = None
+    try:
+        cfg_res = admin.table("whatsapp_configs").select("*").eq("org_id", org_id).execute()
+        if cfg_res.data:
+            cfg = cfg_res.data[0]
+            sid = cfg.get("account_sid")
+            token = cfg.get("auth_token_encrypted")
+            from_num = cfg.get("phone_number")
+    except Exception as exc:
+        logger.warning("Could not fetch org whatsapp_configs: %s", exc)
+
+    return _twilio_send(to, body_text, from_number=from_num, media_url=media_url, account_sid=sid, auth_token=token)
+
+
 def _find_or_create_contact(admin, org_id: str, phone_number: str, name: Optional[str] = None) -> str:
     """Return contact id, creating the record if it doesn't exist."""
     clean = phone_number.replace("whatsapp:", "").strip()
@@ -254,7 +274,7 @@ async def test_config(
 
     # Try to send to the same number (echo test)
     test_to = cfg["phone_number"]
-    result = _twilio_send(test_to, "✅ NexusOS WhatsApp Bot — configuração confirmada!", cfg["phone_number"])
+    result = _twilio_send_for_org(admin, org_id, test_to, "✅ NexusOS WhatsApp Bot — configuração confirmada!")
     return {"message": "Test message sent", "sid": result.get("sid")}
 
 
@@ -561,7 +581,7 @@ async def reply_to_conversation(
 
     contact = conv_res.data.get("contacts") or {}
     phone = contact.get("phone_number") or body.to
-    result = _twilio_send(phone, body.message, media_url=body.media_url)
+    result = _twilio_send_for_org(admin, org_id, phone, body.message, media_url=body.media_url)
 
     admin.table("messages").insert({
         "conversation_id": conversation_id,
@@ -634,7 +654,7 @@ async def send_message(
     admin = get_supabase_admin()
     clean_to = body.to.replace("whatsapp:", "").strip()
 
-    result = _twilio_send(clean_to, body.message, media_url=body.media_url)
+    result = _twilio_send_for_org(admin, org_id, clean_to, body.message, media_url=body.media_url)
 
     contact_id = _find_or_create_contact(admin, org_id, clean_to)
     conv_id, _ = _find_or_create_conversation(admin, org_id, contact_id)
