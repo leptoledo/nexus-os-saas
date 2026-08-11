@@ -58,6 +58,13 @@ const VIEWS = [
 
 const TOTAL_GANTT_DAYS = 14
 
+const GANTT_TASKS = [
+  { id: '1', name: 'Arquitetura & Setup', start: 1, duration: 4, color: 'bg-indigo-500' },
+  { id: '2', name: 'Design de Componentes', start: 3, duration: 5, color: 'bg-emerald-500' },
+  { id: '3', name: 'Integração de APIs', start: 6, duration: 4, color: 'bg-amber-500' },
+  { id: '4', name: 'Testes & Validação', start: 9, duration: 5, color: 'bg-purple-500' },
+]
+
 export default function ProjectsPage() {
   const [activeView, setActiveView] = useState('kanban')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
