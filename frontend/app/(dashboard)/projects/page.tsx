@@ -23,6 +23,7 @@ import { CreateProjectModal } from '@/components/projects/CreateProjectModal'
 import { CreateTaskModal } from '@/components/projects/CreateTaskModal'
 import { Button } from '@/components/ui/button'
 import { cn, formatDate, getInitials } from '@/lib/utils'
+import { toast } from 'sonner'
 
 import {
   useProjects,
